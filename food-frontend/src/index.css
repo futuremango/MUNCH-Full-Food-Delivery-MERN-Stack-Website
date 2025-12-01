@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+/* Add these global styles */
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+* {
+  box-sizing: border-box;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+::-webkit-scrollbar,
+::-webkit-scrollbar{
+  display: none;
+}
+/* Import and define SuperWoobly font */
+@font-face {
+  font-family: 'SuperWoobly';
+  src: url('./fonts/SuperWoobly-8MJlz.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Import and define Aquire font family */
+@font-face {
+  font-family: 'Aquire';
+  src: url('./fonts/Aquire-BW0ox.otf') format('opentype');
+  font-weight: 400; /* Regular */
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Aquire';
+  src: url('./fonts/AquireBold-8Ma60.otf') format('opentype');
+  font-weight: 700; /* Bold */
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Aquire';
+  src: url('./fonts/AquireLight-YzE0o.otf') format('opentype');
+  font-weight: 300; /* Light */
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Mulish';
+  src: url('./fonts/Mulish/static/Mulish-ExtraBold.ttf') format('truetype');
+  font-weight: 800; /* Extra Bold */
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Mulish';
+  src: url('./fonts/Mulish/static/Mulish-Regular.ttf') format('truetype');
+  font-weight: 400; /* Extra Bold */
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --bg-image: url('./images/bg1.jpg');
+}
+
+/* Add custom font classes */
+@layer utilities {
+  /* SuperWoobly */
+  .font-super-woobly {
+    font-family: 'SuperWoobly', cursive;
+  }
+  
+  /* Aquire - All weights */
+  .font-aquire {
+    font-family: 'Aquire', sans-serif;
+  }
+  
+  .font-aquire-light {
+    font-family: 'Aquire', sans-serif;
+    font-weight: 300;
+  }
+  
+  .font-aquire-regular {
+    font-family: 'Aquire', sans-serif;
+    font-weight: 400;
+  }
+  
+  .font-aquire-bold {
+    font-family: 'Aquire', sans-serif;
+    font-weight: 700;
+  }
+  
+  .font-mulish-extrabold {
+    font-family: 'Mulish', sans-serif;
+    font-family: 1000;
+  }
+  .font-mulish-regular {
+    font-family: 'Mulish', sans-serif;
+    font-family: 400;
+  }
+
+  .bg-custom-image {
+    background-image: var(--bg-image);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+   .bg-owner-dash {
+    background-image: url('./images/bg.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+}
