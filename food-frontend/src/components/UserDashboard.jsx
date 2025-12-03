@@ -2,147 +2,249 @@ import React, { useEffect, useRef, useState } from 'react'
 import Navbar from './Navbar.jsx'
 import { categories } from '../category.js'
 import CategoryCard from './CategoryCard.jsx'
-import { FaCircleChevronLeft } from "react-icons/fa6";
-import { FaCircleChevronRight } from "react-icons/fa6";
+import { FaCircleChevronLeft, FaCircleChevronRight } from "react-icons/fa6";
 import { useSelector } from 'react-redux';
-import useGetShopByCity from '../hooks/useGetShopByCity'; // ✅ Add this import
 
-function UserDashboard () {
-  const catScrollRef=useRef();
-  const shopScrollRef=useRef();
+function UserDashboard() {
+  //refs
+  const catScrollRef = useRef();
+  const shopScrollRef = useRef();
 
-  const {  getCity, getShopsinCity } = useSelector((state) => state.user); // ✅ Add getShopsinCity
-  const [scrollButton, setScrollButton] = useState({left:false, right:true})
-  const [scrollShopButton, setScrollShopButton] = useState({left:false, right:true})
+  //useStates
+  const { getCity, getShopsinCity, getItemsinCity } = useSelector((state) => state.user);
+  const [scrollButton, setScrollButton] = useState({ left: false, right: true })
+  const [scrollShopButton, setScrollShopButton] = useState({ left: false, right: true })
   
-  // ✅ ADD THIS HOOK CALL
-  useGetShopByCity();
   
-  const handleScroll=(ref,direction)=>{
+  const handleScroll = (ref, direction) => {
     if(ref.current){
       ref.current.scrollBy({
-        left:direction=="left"?-300:300,
-        behavior:"smooth"
+        left: direction === "left" ? -300 : 300,
+        behavior: "smooth"
       })
-      setTimeout(()=>{
+      setTimeout(() => {
         if(ref === catScrollRef){
           checkScrollPosition()
-        }else{
+        } else {
           checkShopScrollPosition()
         }
       }, 300)
     }
   }
 
-  const checkScrollPosition=()=>{
+  //this one is for Categories..
+  const checkScrollPosition = () => {
     if(catScrollRef.current){
-          const {scrollLeft, clientWidth, scrollWidth}=catScrollRef.current
-          setScrollButton({
-            left: scrollLeft > 0,
-            right: scrollLeft < scrollWidth - clientWidth - 10 
-          });
-        }
-      }
-  const checkShopScrollPosition=()=>{
+      const { scrollLeft, clientWidth, scrollWidth } = catScrollRef.current
+      setScrollButton({
+        left: scrollLeft > 0,
+        right: scrollLeft < scrollWidth - clientWidth - 10 
+      });
+    }
+  }
+      //this for shop
+  const checkShopScrollPosition = () => {
     if(shopScrollRef.current){
-          const {scrollLeft, clientWidth, scrollWidth}=shopScrollRef.current
-          setScrollShopButton({
-            left: scrollLeft > 0,
-            right: scrollLeft < scrollWidth - clientWidth - 10 
-          });
-        }
-      }
+      const { scrollLeft, clientWidth, scrollWidth } = shopScrollRef.current
+      setScrollShopButton({
+        left: scrollLeft > 0,
+        right: scrollLeft < scrollWidth - clientWidth - 10 
+      });
+    }
+  }
 
   useEffect(() => {
-   const element = catScrollRef.current
-   if(element){
-    element.addEventListener('scroll', checkScrollPosition)
-   }
+    const element = catScrollRef.current
+    if(element){
+      element.addEventListener('scroll', checkScrollPosition)
+      //initial position? -> downward arrow *this is embarrasing
+      checkScrollPosition();
+    }
     return () => {
       if(element){
         element.removeEventListener('scroll', checkScrollPosition)
       }
     }
   }, [])
+
+  useEffect(() => {
+    const element = shopScrollRef.current
+    if(element){
+      element.addEventListener('scroll', checkShopScrollPosition)
+      //initial position -> *yk what im tryna say rom
+      checkShopScrollPosition();
+    }
+    return () => {
+      if(element){
+        element.removeEventListener('scroll', checkShopScrollPosition)
+      }
+    }
+  }, [])
+
+  // Debug log
+  console.log("UserDashboard - State:", { 
+    getCity, 
+    shopsCount: getShopsinCity?.length,
+    itemsCount: getItemsinCity?.length 
+  });
   
   return (
-    <>
     <div className="w-screen min-h-screen font-mulish-regular flex flex-col 
-    gap-5 items-center bg-[#fff9f6] overflow-y-auto">
-    <Navbar/>
+    items-center bg-gradient-to-b from-orange-50 to-white overflow-y-auto">
+      <Navbar/>
 
-      {/* Categories */}
-      <div className='w-full max-w-6xl flex flex-col gap-5 items-start
-      p-2.5'>
-        <h1 className='text-gray-800 text-2xl sm:text-3xl'>
-          Inspiration for your first order
-        </h1>
-
-        {/* Mapping Category Cards */}
-        <div className='relative w-full'>
-        {scrollButton.left && <button className='absolute left-0 bg-[#ec4a09] text-white top-1/2 
-        -translate-y-1/2 p-2 rounded-full shadow-lg hover:bg-[#ff4d2d] z-10'
-        onClick={()=>handleScroll(catScrollRef,"left")}>
-        <FaCircleChevronLeft />
-        </button>}
+      {/* Main Content Container */}
+      <div className="w-full max-w-7xl px-4 sm:px-6 py-6 space-y-10">
         
-          <div className='w-full flex overflow-x-auto gap-4 pb-3 scrollbar-thin scrollbar-thumb-[#ec4a09]
-          scroll-track-transparent scroll-smooth' ref={catScrollRef}>
-            {categories.map((cat,index)=>(
-            <CategoryCard data={cat} key={index} />
-          ))}
-          </div>
-          {scrollButton.right && <button className='absolute right-0 bg-[#ec4a09] text-white top-1/2 
-        -translate-y-1/2 p-2 rounded-full shadow-lg hover:bg-[#ff4d2d] z-10'
-         onClick={()=>handleScroll(catScrollRef,"right")}>
-            <FaCircleChevronRight/>
-          </button>}
-        </div>
-      </div>
-
-      {/* Shops in your area */}
-      <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-2.5'>
-       <h1 className='text-gray-800 text-2xl sm:text-3xl'>
-           Best Shops in {getCity}
-        </h1>
-        
-        {/* ✅ ADD SHOPS DISPLAY */}
-        {getShopsinCity && getShopsinCity.length > 0 ? (
-          <div className="relative w-full">
-            
-            {/* Left Scroll Button */}
-            {scrollShopButton.left && <button className='absolute left-0 bg-[#ec4a09] text-white top-1/2 
-            -translate-y-1/2 p-2 rounded-full shadow-lg hover:bg-[#ff4d2d] z-10'
-            onClick={()=>handleScroll(catScrollRef,"left")}>
-            <FaCircleChevronLeft />
-            </button>
-            }
-
-            {/* Mapping Shops */}
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-            {getShopsinCity.map(shop => (
-              <div key={shop._id} className="bg-white rounded-xl shadow-lg p-4">
-                <img src={shop.image} alt={shop.name} className="w-full h-32 object-cover rounded-lg mb-2" />
-                <h3 className="font-bold text-lg">{shop.name}</h3>
-                <p className="text-gray-600">{shop.city}, {shop.state}</p>
-              </div>
-            ))}
-
-            {/* Right Scroll Button */}
-            {scrollShopButton.right && <button className='absolute right-0 bg-[#ec4a09] text-white top-1/2 
-            -translate-y-1/2 p-2 rounded-full shadow-lg hover:bg-[#ff4d2d] z-10'
-            onClick={()=>handleScroll(catScrollRef,"right")}>
-            <FaCircleChevronRight/>
-            </button>}
-            
+        {/* Categories Section */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-gray-900 text-2xl sm:text-3xl font-bold">
+                Inspiration for your first order
+              </h1>
+              <p className="text-gray-600 text-sm mt-1">Explore delicious options to get started</p>
+            </div>
+            <div className="flex space-x-2">
+              <button 
+                onClick={() => handleScroll(catScrollRef, "left")}
+                className={`p-2 rounded-full transition-all ${scrollButton.left ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+                disabled={!scrollButton.left}
+              >
+                <FaCircleChevronLeft size={20} />
+              </button>
+              <button 
+                onClick={() => handleScroll(catScrollRef, "right")}
+                className={`p-2 rounded-full transition-all ${scrollButton.right ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+                disabled={!scrollButton.right}
+              >
+                <FaCircleChevronRight size={20} />
+              </button>
             </div>
           </div>
-        ) : (
-          <p className="text-gray-500">No shops found in {getCity}</p>
-        )}
+          
+          {categories && categories.length > 0 ? (
+            <div className="relative">
+              <div 
+                className="w-full flex overflow-x-auto gap-5 pb-4 scrollbar-thin scrollbar-thumb-orange-400 scrollbar-track-orange-100 scroll-smooth" 
+                ref={catScrollRef}
+              >
+                {categories.map((cat, index) => (
+                  <CategoryCard name={cat.category || cat.name} image={cat.image} key={index} />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-10">
+              <p className="text-gray-500 text-lg">No categories available</p>
+              <p className="text-gray-400 text-sm mt-2">Check back later for delicious options!</p>
+            </div>
+          )}
+        </section>
+
+        {/* Shops in your area Section */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-gray-900 text-2xl sm:text-3xl font-bold">
+                Best Shops in <span className="text-orange-600">{getCity || "Your City"}</span>
+              </h1>
+              <p className="text-gray-600 text-sm mt-1">Top-rated shops near you</p>
+            </div>
+            {getShopsinCity && getShopsinCity.length > 0 && (
+              <div className="flex space-x-2">
+                <button 
+                  onClick={() => handleScroll(shopScrollRef, "left")}
+                  className={`p-2 rounded-full transition-all ${scrollShopButton.left ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+                  disabled={!scrollShopButton.left}
+                >
+                  <FaCircleChevronLeft size={20} />
+                </button>
+                <button 
+                  onClick={() => handleScroll(shopScrollRef, "right")}
+                  className={`p-2 rounded-full transition-all ${scrollShopButton.right ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+                  disabled={!scrollShopButton.right}
+                >
+                  <FaCircleChevronRight size={20} />
+                </button>
+              </div>
+            )}
+          </div>
+          
+          {getShopsinCity && getShopsinCity.length > 0 ? (
+            <div className="relative">
+              <div 
+                className="w-full flex overflow-x-auto gap-5 pb-4 scrollbar-thin scrollbar-thumb-orange-400 scrollbar-track-orange-100 scroll-smooth" 
+                ref={shopScrollRef}
+              >
+                {getShopsinCity.map((shop, index) => (
+                  <CategoryCard name={shop.name} image={shop.image} key={index} />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-10 bg-gradient-to-r from-orange-50 to-white rounded-2xl border border-orange-100">
+              <div className="max-w-md mx-auto">
+                <div className="text-orange-400 text-5xl mb-4">🏪</div>
+                <h3 className="text-gray-700 text-lg font-semibold">
+                  {getCity ? `No shops found in ${getCity}` : "Detecting your location..."}
+                </h3>
+                <p className="text-gray-500 text-sm mt-2">
+                  {getCity ? "We're working on adding more shops in your area" : "Please wait while we get your location"}
+                </p>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* Suggestions Section */}
+        {getItemsinCity && getItemsinCity.length > 0 ? (
+          <section className="space-y-4">
+            <div>
+              <h1 className="text-gray-900 text-2xl sm:text-3xl font-bold">
+                Items You'd Love
+              </h1>
+              <p className="text-gray-600 text-sm mt-1">Popular items from local shops</p>
+            </div>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              {getItemsinCity.map((item, index) => (
+                <div key={index} className="transform transition-transform hover:-translate-y-1">
+                  <CategoryCard name={item.name} image={item.image} />
+                </div>
+              ))}
+            </div>
+            
+            {getItemsinCity.length > 6 && (
+              <div className="text-center pt-4">
+                <button className="text-orange-600 hover:text-orange-700 font-medium text-sm transition-colors">
+                  View All Items →
+                </button>
+              </div>
+            )}
+          </section>
+        ) : getCity ? (
+          <section className="space-y-4">
+            <div>
+              <h1 className="text-gray-900 text-2xl sm:text-3xl font-bold">
+                Items You'd Love
+              </h1>
+              <p className="text-gray-600 text-sm mt-1">Popular items from local shops</p>
+            </div>
+            <div className="text-center py-10 bg-gradient-to-r from-orange-50 to-white rounded-2xl border border-orange-100">
+              <div className="max-w-md mx-auto">
+                <div className="text-orange-400 text-5xl mb-4">🍕</div>
+                <h3 className="text-gray-700 text-lg font-semibold">No items found yet</h3>
+                <p className="text-gray-500 text-sm mt-2">Shops in {getCity} haven't added items yet</p>
+              </div>
+            </div>
+          </section>
+        ) : null}
       </div>
+
+      {/* Bottom Padding */}
+      <div className="h-10"></div>
     </div>
-    </>
   )
 }
 

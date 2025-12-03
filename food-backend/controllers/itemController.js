@@ -100,7 +100,7 @@ export const getItemByID = async (req, res) => {
       .status(500)
       .json({ message: `Error Getting item with that ID: ${error}` });
   }
-}
+};
 
 export const deleteItem = async (req, res) => {
   try {
@@ -122,5 +122,62 @@ export const deleteItem = async (req, res) => {
     return res
       .status(500)
       .json({ message: `Error Delete item in Shop: ${error}` });
+  }
+};
+
+// itemController.js - UPDATED getItemsByCity
+export const getItemsByCity = async (req, res) => {
+  try {
+    const { city } = req.params;
+    
+    if (!city || city === "null" || city === "undefined") {
+      return res.status(200).json([]);
+    }
+    
+    // ✅ NORMALIZE CITY (same as shop controller)
+    const normalizeCity = (cityName) => {
+      if (!cityName) return "";
+      const normalized = cityName.toLowerCase().trim();
+      
+      const cityMap = {
+        'wah': 'wah cantt',
+        'wah cantt': 'wah cantt',
+        'islamabad': 'islamabad',
+        'rawalpindi': 'rawalpindi',
+      };
+      
+      return cityMap[normalized] || normalized;
+    };
+    
+    const normalizedCity = normalizeCity(city);
+    
+    console.log(`🔍 Searching items for city: "${city}" → normalized: "${normalizedCity}"`);
+    
+    // ✅ FIRST: Find shops in the city
+    const shops = await Shop.find({
+      $or: [
+        { city: { $regex: new RegExp(`^${normalizedCity}$`, "i") } },
+        { city: { $regex: new RegExp(normalizedCity, "i") } }
+      ]
+    });
+    
+    if (shops.length === 0) {
+      console.log(`❌ No shops found for city: "${city}"`);
+      return res.status(200).json([]);
+    }
+    
+    const shopIds = shops.map(shop => shop._id);
+    
+    // ✅ SECOND: Get items from those shops
+    const items = await Item.find({ 
+      shop: { $in: shopIds } 
+    }).populate('shop', 'name city');
+    
+    console.log(`✅ Found ${items.length} items across ${shops.length} shops`);
+    
+    return res.status(200).json(items);
+  } catch (error) {
+    console.error("❌ Error in getItemsByCity:", error);
+    return res.status(500).json({message: `Server Error: ${error.message}`});
   }
 }

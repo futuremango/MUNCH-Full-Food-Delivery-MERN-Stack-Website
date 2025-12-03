@@ -57,19 +57,53 @@ export const getShop = async (req, res) => {
   }
 };
 
+// shopController.js - UPDATED getShopCity
 export const getShopCity = async (req, res) => {
   try {
-    const {city} = req.params
+    const { city } = req.params;
     
-    const shop = await Shop.find({
-      city:{$regex:new RegExp(`^${city}$`,"i")}
-    }).populate('items')
-    
-    if(!shop || shop.length === 0){
-      return res.status(400).json({message:'Sorry, No Shop found in your City'})
+    if (!city || city === "null" || city === "undefined") {
+      return res.status(200).json([]);
     }
-    return res.status(200).json(shop)
+    
+    // ✅ NORMALIZE CITY NAME
+    const normalizeCity = (cityName) => {
+      if (!cityName) return "";
+      const normalized = cityName.toLowerCase().trim();
+      
+      // Map variations to standard names
+      const cityMap = {
+        'wah': 'wah cantt',
+        'wah cantt': 'wah cantt',
+        'islamabad': 'islamabad',
+        'rawalpindi': 'rawalpindi',
+        'lhr': 'lahore',
+        'lahore': 'lahore',
+        'khi': 'karachi',
+        'karachi': 'karachi',
+      };
+      
+      return cityMap[normalized] || normalized;
+    };
+    
+    const normalizedCity = normalizeCity(city);
+    
+    console.log(`🔍 Searching shops for city: "${city}" → normalized: "${normalizedCity}"`);
+    
+    // ✅ FIND SHOPS WITH FLEXIBLE MATCHING
+    const shops = await Shop.find({
+      $or: [
+        { city: { $regex: new RegExp(`^${normalizedCity}$`, "i") } },
+        { city: { $regex: new RegExp(normalizedCity, "i") } },
+        { city: { $regex: new RegExp(city.replace(/cantt|colony|town/i, "").trim(), "i") } }
+      ]
+    }).populate('items').populate('owner', 'name email');
+    
+    console.log(`✅ Found ${shops.length} shops for "${city}"`);
+    
+    return res.status(200).json(shops);
   } catch (error) {
-      return res.status(500).json({message:`Error getting Shops by city: ${error}` })
+    console.error("❌ Error in getShopCity:", error);
+    return res.status(500).json({message: `Server Error: ${error.message}`});
   }
 }

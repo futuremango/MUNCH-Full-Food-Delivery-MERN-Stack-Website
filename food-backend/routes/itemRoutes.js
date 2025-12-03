@@ -1,6 +1,6 @@
 import express from 'express'
 import isAuth from '../middleware/isAuth.js'
-import { addItem, deleteItem, editItem, getItemByID } from '../controllers/itemController.js'
+import { addItem, deleteItem, editItem, getItemByID, getItemsByCity } from '../controllers/itemController.js'
 import { upload } from '../middleware/multer.js'
 
 
@@ -10,5 +10,6 @@ itemRouter.post("/add-item",isAuth,upload.single("image"),addItem)
 itemRouter.put("/edit-item/:itemId",isAuth,upload.single("image"),editItem)
 itemRouter.get("/get-item-by-id/:itemId",isAuth,getItemByID)
 itemRouter.delete("/delete-item/:itemId",isAuth,deleteItem)
+itemRouter.get("/getitems-bycity/:city",isAuth,getItemsByCity)
 
 export default itemRouter

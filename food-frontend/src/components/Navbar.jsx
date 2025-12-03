@@ -1,7 +1,6 @@
 import axios from "axios";
 import { useState, useRef, useEffect } from "react";
 import { FaSearch, FaSignOutAlt, FaUser } from "react-icons/fa";
-import { FaLocationDot } from "react-icons/fa6";
 import { HiOutlineShoppingCart } from "react-icons/hi";
 import { IoClose } from "react-icons/io5";
 import { useSelector } from "react-redux";
@@ -12,20 +11,25 @@ import { serverUrl } from "../App";
 import { useDispatch } from "react-redux";
 import { setUserData } from "../redux/userSlice";
 import { useNavigate } from "react-router-dom";
+import CitySelector from './CitySelector';
 
 function Navbar() {
 
   //useStates used
-  const { userData, getCity } = useSelector((state) => state.user);
+  const { userData } = useSelector((state) => state.user);
   const { getShopData } = useSelector((state) => state.owner);
   const [showPopup, setShowPopup] = useState(false);
-  const popupRef = useRef(null);
   const [showSearch, setShowSearch] = useState(false);
   const [Loading, setLoading] = useState(false);
+
+  //refs to close outside when clicked
+  const popupRef = useRef(null);
+  const searchRef = useRef(null);
 
   //useDispatch used to get userData, getCity
   const dispatch = useDispatch();
 
+  //navigate
   const navigate = useNavigate();
 
   // Close popup when clicking outside
@@ -33,6 +37,12 @@ function Navbar() {
     const handleClickOutside = (event) => {
       if (popupRef.current && !popupRef.current.contains(event.target)) {
         setShowPopup(false);
+      }
+       if (searchRef.current && !searchRef.current.contains(event.target)) {
+        const searchIcon = event.target.closest('.search-icon') || event.target.classList.contains('search-icon')
+        if(!searchIcon){
+          setShowSearch(false)
+        }
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -56,7 +66,6 @@ function Navbar() {
 
   return (
     <div className="w-full h-20 flex bg-[#fff9f6] items-center justify-between md:justify-center gap-6 px-6 fixed top-0 z-50 border-b border-orange-100 shadow-sm">
-       
 
       {/* Heading */}
       {userData.role==="user"? <div className="flex items-center">
@@ -68,7 +77,6 @@ function Navbar() {
              Munch'in
           </h1>
         </div>
-        
         </>
         } 
 
@@ -76,27 +84,27 @@ function Navbar() {
         {userData.role==="user" && showSearch && (
           <div className="flex w-[90%] h-[70px] md:hidden bg-white/90 backdrop-blur-sm 
           shadow-xl rounded-2xl items-center gap-5 border border-orange-200 
-          hover:shadow-xl transition-all duration-300 fixed top-20 left-[5%] z-50">
-            
-        {/* Location */}
-        <div className="flex items-center w-[30%] overflow-hidden gap-3 px-3 border-r-2 border-orange-200">
-          <FaLocationDot size={20} className="text-[#ec4a09]" />
-          <div className="w-[80%] truncate text-gray-600 font-medium text-sm">
-            {getCity}
-          </div>
-        </div>
+          hover:shadow-xl transition-all duration-300 fixed top-20 left-[5%] z-50" ref={searchRef}>
+       
 
-        {/* Searchbar */}
-        <div className="flex w-[70%] items-center gap-3">
-            <FaSearch size={25} className="text-[#ec4a09]" />
-          <input
-            type="text"
-            placeholder="Search Category, Foods, Stores..."
-            className="px-2.5 text-gray-700 truncate outline-0 w-full bg-transparent 
-          placeholder-gray-400 text-sm focus:placeholder-orange-300 
-            transition-colors"/>
-        </div>
-      </div>
+               {/* CitySelector INSIDE Mobile Search Bar */}
+              <div className="flex md:hidden items-center w-[35%] gap-3 px-3 border-r-2 border-orange-200">
+                <div className="min-w-0">
+                  <CitySelector />
+                </div>
+              </div>
+
+              {/* Searchbar */}
+              <div className="flex w-[65%] items-center gap-3">
+                <FaSearch size={25} id="search-icon" className="text-[#ec4a09]" />
+                <input
+                  type="text"
+                  placeholder="Search Category, Foods, Stores..."
+                  className="px-2.5 text-gray-700 truncate outline-0 w-full bg-transparent 
+                    placeholder-gray-400 text-sm focus:placeholder-orange-300 
+                    transition-colors"/>
+              </div>
+            </div>
     )}
 
     {/* Search Container for Big Devices */}
@@ -104,25 +112,22 @@ function Navbar() {
     shadow-lg rounded-2xl items-center gap-4 border border-orange-200 
     hover:shadow-xl transition-all duration-300">
 
-    {/* Location */}
-    <div className="flex items-center w-[30%] overflow-hidden gap-3 px-3 border-r-2 border-orange-200">
-      <FaLocationDot size={20} className="text-[#ec4a09]" />
-      <div className="w-[80%] truncate text-gray-600 font-medium text-sm">
-        {getCity}
-      </div>
-    </div>
-
-    {/* Searchbar */}
-    <div className="flex w-[80%] items-center gap-3">
-      <FaSearch size={25} className="text-[#ec4a09]" />
-      <input
-        type="text"
-        placeholder="Search Category, Foods, Stores..."
-        className="px-2.5 text-gray-700 outline-0 w-full bg-transparent 
-        placeholder-gray-400 text-sm focus:placeholder-orange-300 transition-colors"/>
-    </div>
-  </div>
-      }
+            {/* Location */}
+            <div className="md:flex hidden items-center w-[30%] min-w-0 gap-3 px-3 border-r-2 border-orange-200">
+              <CitySelector />
+            </div>
+   
+            {/* Searchbar */}
+            <div className="flex w-full items-center gap-3 px-4">
+              <FaSearch size={25} className="text-[#ec4a09]" />
+              <input
+                type="text"
+                placeholder="Search Category, Foods, Stores..."
+                className="px-2.5 text-gray-700 outline-0 w-full bg-transparent 
+                  placeholder-gray-400 text-sm focus:placeholder-orange-300 transition-colors"/>
+              </div>
+            </div>
+             }
 
     
 
@@ -155,7 +160,6 @@ function Navbar() {
           </button>
         </>
         }
-    {/* Mobile buttons for owners */}
     
 
     {/* USER AVATAR FOR OWNERS - ONLY SHOW ON MOBILE */}
@@ -307,6 +311,7 @@ function Navbar() {
         )}
       </div>
     </div>
+  
   );
 }
 
