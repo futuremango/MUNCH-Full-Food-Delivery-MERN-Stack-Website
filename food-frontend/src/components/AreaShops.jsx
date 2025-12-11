@@ -1,11 +1,11 @@
 import React from 'react'
 
-function CategoryCard({ name, image }) {
+function AreaShops({ name, image }) {
   return (
     <div className="group relative w-[160px] h-[160px] md:w-[220px] md:h-[220px] 
-                    rounded-full overflow-hidden flex-shrink-0 cursor-pointer
-                    border hover:border-orange-300
-                    transition-all duration-300 hover:scale-[1.02] font-mulish-regular ">
+                    rounded-xl overflow-hidden flex-shrink-0 cursor-pointer
+                    border border-gray-200 hover:border-orange-300
+                    transition-all duration-300 hover:scale-[1.02]">
       {/* Gradient Overlay Container */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 z-10"></div>
       
@@ -22,7 +22,7 @@ function CategoryCard({ name, image }) {
       {/* Name with Subtle Animation */}
       <div className="absolute bottom-0 left-0 right-0 z-20 p-4">
         <div className="transform transition-transform duration-300 group-hover:-translate-y-1">
-          <h6 className="text-white font-mulish-regular font-semibold text-sm md:text-base text-center leading-tight tracking-wide">
+          <h6 className="text-white font-semibold text-sm md:text-base text-center leading-tight tracking-wide">
             {name}
           </h6>
           
@@ -42,4 +42,4 @@ function CategoryCard({ name, image }) {
   )
 }
 
-export default CategoryCard
+export default AreaShops;

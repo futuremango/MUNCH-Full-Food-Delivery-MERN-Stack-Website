@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+//contains user related data and actions to modify that data
 const userSlice = createSlice({
     name: 'user',
     initialState:{
@@ -7,8 +8,9 @@ const userSlice = createSlice({
         getCity:null,
         getState:null,
         getAddress:null,
-        getShopsinCity: [],  // ✅ Changed from null to []
-        getItemsinCity: [],  // ✅ Changed from null to []
+        getShopsinCity: [],  
+        getItemsinCity: [],  
+        cartItems: [], //array to hold items added to cart
     },
     reducers:{
         setUserData:(state, action)=>{
@@ -29,8 +31,17 @@ const userSlice = createSlice({
         setGetItemsinCity:(state, action)=>{
             state.getItemsinCity=action.payload || []
         },
+        addToCart:(state, action)=>{
+            const cartItem = action.payload //cart m item ko add krne wala action
+            const existingItem = state.cartItems.find(item=>item.id === cartItem.id) //check if any item already in cart, match by id
+            if(existingItem){
+                existingItem.quantity+=cartItem.quantity //agr yes, tu cart m jo item match hua iuski quantity m jitna add krna tha wo add krdo
+            }else{
+                state.cartItems.push(cartItem) //agr nhi tu naya item push krdo, as add to cart
+            }
+        }
     }
 })
 
-export const {setUserData, setGetCity, setGetState, setGetAddress, setGetShopsinCity, setGetItemsinCity} = userSlice.actions
+export const {setUserData, setGetCity, setGetState, setGetAddress, setGetShopsinCity, setGetItemsinCity, addToCart} = userSlice.actions
 export default userSlice.reducer

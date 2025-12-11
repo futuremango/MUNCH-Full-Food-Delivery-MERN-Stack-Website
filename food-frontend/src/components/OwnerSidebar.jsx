@@ -35,8 +35,8 @@ function OwnerSidebar() {
       
       {/* Logo/Heading */}
       <div className="p-6 border-b border-orange-100">
-        <h1 className="font-super-woobly text-3xl font-bold bg-linear-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
-          Munch'in
+        <h1 className="font-super-woobly text-center text-4xl font-bold bg-linear-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+          Munch
         </h1>
       </div>
 

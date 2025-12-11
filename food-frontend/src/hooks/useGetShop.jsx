@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { serverUrl } from "../App";
 import axios from "axios";
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { setGetShopData } from "../redux/ownerSlice";
 
 //NOTE - this is made so that we can use the Controller and Route and return the Owner.
@@ -9,6 +9,7 @@ import { setGetShopData } from "../redux/ownerSlice";
 
 function useGetShop () {
   const dispatch = useDispatch()
+  const userData = useSelector((state)=>state.user)
   useEffect(() => {
     const fetchShop = async () => {
       try {
@@ -21,7 +22,7 @@ function useGetShop () {
       }
     };
     fetchShop();
-  }, [])
+  }, [userData]);
 };
 
 export default useGetShop

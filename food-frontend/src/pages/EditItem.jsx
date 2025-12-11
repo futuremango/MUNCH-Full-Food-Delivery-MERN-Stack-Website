@@ -244,6 +244,10 @@ function EditItem() {
                     <option value="">Select Food Type</option>
                     <option value="Veg">Veg</option>
                     <option value="Non-veg">Non-Veg</option>
+                    <option value="Drink">Drink</option>
+                    <option value="Sweet">Sweet</option>
+                    <option value="Snack">Snack</option>
+                    <option value="Other">Other</option>
                     </select>
                 </div>
               </div>

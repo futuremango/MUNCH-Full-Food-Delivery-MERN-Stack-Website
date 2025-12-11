@@ -70,7 +70,7 @@ function CitySelector() {
       {showSelector && (
         <div className="fixed md:absolute md:top-full top-24 md:mt-2 left-0 md:left-auto md:right-0 w-64 bg-white rounded-xl md:rounded-xl shadow-2xl border border-orange-200 z-50">
           <div className="p-4">
-            <h3 className="font-bold text-gray-800 mb-3">Select Your City</h3>
+            <h3 className="font-mulish-regular font-bold text-gray-800 mb-3">Select Your City</h3>
             
             {/* Auto-detect Button */}
             <button
@@ -93,14 +93,14 @@ function CitySelector() {
                 </span>
               </div>
               {!getCity && !isDetecting && (
-                <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded-full">
+                <span className="font-mulish-regular text-xs bg-blue-500 text-white px-2 py-1 rounded-full">
                   Recommended
                 </span>
               )}
             </button>
             
             <div className="border-t border-gray-200 pt-3">
-              <p className="text-sm text-gray-500 mb-2">Or select manually:</p>
+              <p className="font-mulish-regular text-sm text-gray-500 mb-2">Or select manually:</p>
               <div className="space-y-1 max-h-60 overflow-y-auto">
                 {cities.map(city => (
                   <button

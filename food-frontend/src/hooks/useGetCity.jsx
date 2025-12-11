@@ -1,4 +1,3 @@
-// useGetCity.jsx - ENHANCED VERSION
 import React, { useEffect, useRef } from "react";
 import { useDispatch } from 'react-redux';
 import { setGetAddress, setGetCity, setGetState } from "../redux/userSlice";
@@ -18,6 +17,7 @@ function useGetCity() {
     const areaToCityMap = {
       // Wah Cantt areas
       'shah wali colony': 'Wah Cantt',
+      'gulshan colony': 'Wah Cantt',
       'lalazar': 'Wah Cantt',
       'civil lines': 'Wah Cantt',
       'attock': 'Wah Cantt',

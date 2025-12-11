@@ -30,15 +30,15 @@ function OwnerDashboard() {
                   <div className="w-full max-w-md bg-white shadow-lg rounded-2xl p-6 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
                     <div className="flex flex-col items-center text-center">
                       <FaUtensils className="text-[#ec4a09] w-16 h-16 sm:w-20 sm:h-20 mb-4" />
-                      <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
+                      <h2 className="font-mulish-regular text-xl sm:text-2xl font-bold text-gray-800 mb-2">
                         Add your Restaurant
                       </h2>
-                      <p className="text-gray-600 mb-4 text-sm sm:text-base">
+                      <p className="font-mulish-regular text-gray-600 mb-4 text-sm sm:text-base">
                         Join our food delivery platform and reach thousands of
                         hungry customers everyday.
                       </p>
                       <button
-                        className="bg-[#ec4a09] text-white px-5 sm:px-6 py-2 rounded-full font-medium shadow-md hover:bg-orange-600 transition-colors duration-300"
+                        className="bg-[#ec4a09] text-white px-5 sm:px-6 py-2 rounded-full font-mulish-regular font-medium shadow-md hover:bg-orange-600 transition-colors duration-300"
                         onClick={() => navigate("/create-edit-shop")}
                       >
                         Get Started

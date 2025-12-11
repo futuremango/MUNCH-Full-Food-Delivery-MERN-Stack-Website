@@ -16,7 +16,7 @@ import CitySelector from './CitySelector';
 function Navbar() {
 
   //useStates used
-  const { userData } = useSelector((state) => state.user);
+  const { userData , cartItems } = useSelector((state) => state.user);
   const { getShopData } = useSelector((state) => state.owner);
   const [showPopup, setShowPopup] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -70,15 +70,16 @@ function Navbar() {
       {/* Heading */}
       {userData.role==="user"? <div className="flex items-center">
           <h1 className="font-super-woobly flex text-3xl font-bold bg-linear-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
-            Munch'in
+            Munch
           </h1>
         </div> : <> <div className="md:hidden flex items-center">
           <h1 className="font-super-woobly flex text-3xl font-bold bg-linear-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
-             Munch'in
+             Munch
           </h1>
         </div>
         </>
         } 
+        
 
         {/* Mobile k liye Search Bar */}
         {userData.role==="user" && showSearch && (
@@ -222,13 +223,13 @@ function Navbar() {
 ) : (
           <>
          {/* Cart */}
-        <div className="relative cursor-pointer group">
+        <div className="relative cursor-pointer group" onClick={()=>navigate('/my-cart')}>
           <HiOutlineShoppingCart
             size={26}
             className="text-orange-500 group-hover:text-orange-600 transition-colors duration-200"/>
           <span className="absolute -right-2 -top-2 bg-linear-to-r from-orange-500 to-red-500 text-white text-xs 
           w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-lg transition-transform group-hover:scale-110">
-            0
+            {cartItems.length}
           </span>
         </div>
 
@@ -278,7 +279,8 @@ function Navbar() {
               <div className="space-y-2 pt-3">
                 {/* cart */}
                 <div className="flex items-center gap-3 text-gray-700 hover:text-orange-500 
-                 cursor-pointer transition-colors duration-200 md:hidden">
+                 cursor-pointer transition-colors duration-200 md:hidden"
+                 onClick={()=>navigate('/my-cart')}>
                   <HiOutlineShoppingCart size={16} />
                   <span className="text-sm font-medium">My Orders</span>
                 </div>
