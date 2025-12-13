@@ -1,4 +1,4 @@
-# MUNCH-Full-Food-Delivery-MERN-Stack-Website
+# MUNCH | Food Delivery with Live Tracking Website
 Munch is a full-stack food delivery web application that connects customers with local restaurants through a seamless, intuitive platform. Built with modern technologies, the app provides real-time order tracking, secure payment processing, and dual interfaces for both customers and restaurant owners.
 
 # Key Features
