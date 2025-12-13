@@ -11,6 +11,7 @@ const userSlice = createSlice({
         getShopsinCity: [],  
         getItemsinCity: [],  
         cartItems: [], //array to hold items added to cart
+        totalAmountInCart: 0,
     },
     reducers:{
         setUserData:(state, action)=>{
@@ -39,9 +40,23 @@ const userSlice = createSlice({
             }else{
                 state.cartItems.push(cartItem) //agr nhi tu naya item push krdo, as add to cart
             }
-        }
+            state.totalAmountInCart = state.cartItems.reduce((total, item)=> total + item.price * item.quantity,0)
+        },
+        updateQuantityInCart:(state, action)=>{
+            const {id, quantity} = action.payload
+            const existingItem = state.cartItems.find(item=>item.id===id)
+            if(existingItem){
+                existingItem.quantity = quantity
+            }
+            state.totalAmountInCart = state.cartItems.reduce((total, item)=> total + item.price * item.quantity,0)
+        },
+        removeItemInCart:(state, action)=>{
+            state.cartItems = state.cartItems.filter(item=>item.id !== action.payload)
+            state.totalAmountInCart = state.cartItems.reduce((total, item)=> total + item.price * item.quantity,0)
+        },
+       
     }
 })
 
-export const {setUserData, setGetCity, setGetState, setGetAddress, setGetShopsinCity, setGetItemsinCity, addToCart} = userSlice.actions
+export const {setUserData, setGetCity, setGetState, setGetAddress, setGetShopsinCity, setGetItemsinCity, addToCart, updateQuantityInCart, removeItemInCart} = userSlice.actions
 export default userSlice.reducer

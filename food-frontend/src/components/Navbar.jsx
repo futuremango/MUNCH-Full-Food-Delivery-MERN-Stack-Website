@@ -170,7 +170,7 @@ function Navbar() {
        shadow-lg font-semibold cursor-pointer hover:shadow-xl 
        transform hover:scale-105 transition-all duration-300"
         onClick={() => setShowPopup((prev) => !prev)}>
-        {userData?.fullName?.slice(0, 1)}
+        {userData?.fullName?.slice(0, 1).toUpperCase()}
       </div>
      
       {/* Popup Menu for Owners - ONLY ON MOBILE */}
@@ -248,7 +248,7 @@ function Navbar() {
            shadow-lg font-semibold cursor-pointer hover:shadow-xl 
            transform hover:scale-105 transition-all duration-300"
             onClick={() => setShowPopup((prev) => !prev)}>
-            {userData?.fullName?.slice(0, 1)}
+            {userData?.fullName?.slice(0, 1).toUpperCase()}
           </div>
          
           {/* Popup Menu */}
@@ -261,7 +261,7 @@ function Navbar() {
               <div className="flex items-center gap-3 pb-3 border-b border-orange-100">
                 <div className="w-8 h-8 rounded-full bg-linear-to-r from-orange-500 to-red-500 
                   flex items-center justify-center text-white text-sm font-semibold shrink-0">
-                  {userData?.fullName?.slice(0, 1)}
+                  {userData?.fullName?.slice(0, 1).toUpperCase()}
                 </div>
                 
                 <div className="flex flex-col min-w-0 flex-1">

@@ -70,6 +70,7 @@ html, body {
   --bg-image: url('./images/bg3.png');
 }
 
+
 /* Add custom font classes */
 @layer utilities {
   /* SuperWoobly */

@@ -146,6 +146,7 @@ function SuggestedItems({ data }) {
                 } mx-auto`}  /> 
               </button>
             </div>
+            
           </div>
         </div>
 
