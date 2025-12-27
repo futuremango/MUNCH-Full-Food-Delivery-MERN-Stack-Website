@@ -72,9 +72,7 @@ function useGetCity() {
     navigator.geolocation.getCurrentPosition(async (pos) => {
       const latitude = pos.coords.latitude;
       const longitude = pos.coords.longitude;
-      
       console.log("📍 Fetching location for:", latitude, longitude);
-      
       try {
         // ✅ Use OpenStreetMap (Free, Reliable, Better for Pakistan)
         const result = await axios.get(
