@@ -6,16 +6,20 @@ import { useNavigate } from "react-router-dom";
 import CartItemCard from "../components/CartItemCard";
 
 function CartPage() {
+  
   const navigate = useNavigate();
   const { cartItems, totalAmountInCart } = useSelector((state) => state.user);
-  
+  const deliveryFee = totalAmountInCart > 500 ? 0 : 50;
+  const subtotal = totalAmountInCart;
+  const totalOverallAmount = subtotal + deliveryFee;
+
   return (
     <div className="min-h-screen bg-[#fff9f6] p-4 md:p-6">
-      
+
       {/* Header */}
       <div className="max-w-6xl mx-auto mb-6">
         <div className="flex items-center gap-4 mb-6">
-          <button 
+          <button
             onClick={() => navigate("/")}
             className="rounded-4xl transition-all duration-300 hover:bg-white">
             <IoArrowBackCircleOutline
@@ -23,15 +27,14 @@ function CartPage() {
               className="text-[#ec4a09] font-mulish-regular font-bold 
               group-hover:scale-110 transition-transform cursor-pointer duration-300"/>
           </button>
-          <div className="flex items-center gap-3">
-            
+          <div className="flex flex-col mt-4">
             <h1 className="text-2xl md:text-3xl font-mulish-regular font-extrabold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-              Your Shopping Cart
-            </h1>
+              Your Shopping Cart </h1>
+            <p className="text-gray-700 mt-1">Confirm the items you have added to cart</p>
           </div>
         </div>
       </div>
-      
+
       {/* Main Content */}
       <div className="max-w-6xl mx-auto">
         {cartItems?.length === 0 ? (
@@ -61,14 +64,14 @@ function CartPage() {
                 <CartItemCard key={index} data={item} />
               ))}
             </div>
-            
+
             {/* Order Summary */}
             <div className="lg:col-span-1">
               <div className="bg-white rounded-3xl shadow-xl border border-orange-100 p-6 sticky top-6">
                 <h3 className="font-mulish-regular font-bold text-xl text-gray-900 mb-6 pb-4 border-b border-gray-100">
                   Order Summary
                 </h3>
-                
+
                 {/* Price Breakdown */}
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between">
@@ -77,26 +80,28 @@ function CartPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Delivery Fee</span>
-                    <span className="font-medium text-green-600">Free</span>
+                    <span className={`font-medium ${deliveryFee === 0 ? "text-green-600" : "text-gray-800"}`}>
+                      {deliveryFee === 0 ? "FREE" : `Rs.${deliveryFee}`}
+                    </span>
                   </div>
-                 
-                  
+
+
                   {/* Total */}
                   <div className="border-t border-gray-200 pt-4 mt-2">
                     <div className="flex justify-between items-center">
                       <span className="font-mulish-regular font-extrabold text-lg text-gray-900">Total</span>
                       <div className="text-right">
                         <p className="font-mulish-regular font-extrabold text-2xl text-[#ec4a09]">
-                          Rs.{totalAmountInCart}
+                          Rs.{totalOverallAmount}
                         </p>
                       </div>
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Checkout Button */}
                 <button
-                  onClick={() =>navigate("/checkout")}
+                  onClick={() => navigate("/checkout")}
                   className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white 
                   font-mulish-regular font-extrabold py-4 rounded-xl shadow-lg
                    hover:from-orange-600 hover:to-red-600 hover:shadow-xl

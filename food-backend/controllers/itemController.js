@@ -125,7 +125,6 @@ export const deleteItem = async (req, res) => {
   }
 };
 
-// itemController.js - UPDATED getItemsByCity
 export const getItemsByCity = async (req, res) => {
   try {
     const { city } = req.params;
@@ -134,7 +133,6 @@ export const getItemsByCity = async (req, res) => {
       return res.status(200).json([]);
     }
     
-    // ✅ NORMALIZE CITY (same as shop controller)
     const normalizeCity = (cityName) => {
       if (!cityName) return "";
       const normalized = cityName.toLowerCase().trim();
@@ -153,7 +151,6 @@ export const getItemsByCity = async (req, res) => {
     
     console.log(`🔍 Searching items for city: "${city}" → normalized: "${normalizedCity}"`);
     
-    // ✅ FIRST: Find shops in the city
     const shops = await Shop.find({
       $or: [
         { city: { $regex: new RegExp(`^${normalizedCity}$`, "i") } },
@@ -168,12 +165,11 @@ export const getItemsByCity = async (req, res) => {
     
     const shopIds = shops.map(shop => shop._id);
     
-    // ✅ SECOND: Get items from those shops
     const items = await Item.find({ 
       shop: { $in: shopIds } 
     }).populate('shop', 'name city');
     
-    console.log(`✅ Found ${items.length} items across ${shops.length} shops`);
+    console.log(`Found ${items.length} items across ${shops.length} shops`);
     
     return res.status(200).json(items);
   } catch (error) {

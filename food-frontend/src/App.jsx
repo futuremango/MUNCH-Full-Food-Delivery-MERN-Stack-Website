@@ -13,14 +13,20 @@ import AddItem from './pages/AddItem'
 import EditItem from './pages/EditItem'
 import CartPage from './pages/CartPage'
 import PaymentMethodPage from './pages/PaymentMethodPage'
+import OrderConfirmationPage from './pages/OrderConfirmationPage'
+import MyOrders from './pages/MyOrders'
+import useGetMyOrders from './hooks/useGetMyOrders'
+import useUpdateLocation from './hooks/useUpdateLocation'
 
 export const serverUrl="http://localhost:8000"
 
 
 function App() {
   useGetCurrentUser()
+  useUpdateLocation()
   useGetCity()
-  useGetShop()  
+  useGetShop()
+  useGetMyOrders()  
   
   const {userData} = useSelector(state=>state.user)
   return (
@@ -34,6 +40,9 @@ function App() {
     <Route path='/edit-item/:itemId'  element={userData?<EditItem/>:<Navigate to={'/signin'}/>}/>
     <Route path='/my-cart'  element={userData?<CartPage/>:<Navigate to={'/signin'}/>}/>
     <Route path='/checkout'  element={userData?<PaymentMethodPage/>:<Navigate to={'/signin'}/>}/>
+    <Route path='/confirmed'  element={userData?<OrderConfirmationPage/>:<Navigate to={'/'}/>}/>
+    <Route path='/myorders'  element={userData?<MyOrders/>:<Navigate to={'/signin'}/>}/>
+
     </Routes>
   )
 }

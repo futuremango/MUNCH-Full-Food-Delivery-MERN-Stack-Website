@@ -16,7 +16,7 @@ import CitySelector from './CitySelector';
 function Navbar() {
 
   //useStates used
-  const { userData , cartItems } = useSelector((state) => state.user);
+  const { userData , cartItems, myOrders } = useSelector((state) => state.user);
   const { getShopData } = useSelector((state) => state.owner);
   const [showPopup, setShowPopup] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -63,6 +63,10 @@ function Navbar() {
       setLoading(false);
     }
   };
+
+  const pendingOrdersCount = myOrders?.filter(order => 
+    order.shopOrders?.[0]?.status === "pending"
+  ).length || 0;
 
   return (
     <div className="w-full h-20 flex bg-[#fff9f6] items-center justify-between md:justify-center gap-6 px-6 fixed top-0 z-50 border-b border-orange-100 shadow-sm">
@@ -154,10 +158,10 @@ function Navbar() {
 
           <button className="relative md:hidden flex items-center p-2.5 cursor-pointer font-semibold rounded-full 
             bg-[#ec4a09]/10 text-[#ec4a09] shadow-lg transition-all duration-300 
-            hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0">
+            hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0" onClick={() => navigate("/myorders")}>
             <TbReceiptDollar size={20}/>
             <span className="absolute -right-1.5 -top-1 text-xs font-bold text-white
-              bg-[#ec4a09] rounded-full px-1.5 py-px">0</span>
+              bg-[#ec4a09] rounded-full px-1.5 py-px"> {pendingOrdersCount}</span>
           </button>
         </>
         }
@@ -237,7 +241,7 @@ function Navbar() {
         <button className="hidden md:block px-4 py-2.5 text-sm font-semibold rounded-xl 
         bg-linear-to-r bg-[#ec4a09]/10 text-[#ec4a09] shadow-lg
         transition-all duration-300 hover:shadow-xl transform hover:-translate-y-0.5
-         active:translate-y-0">
+         active:translate-y-0" onClick={()=>navigate("/myorders")}>
           My Orders
         </button>
 
@@ -280,7 +284,7 @@ function Navbar() {
                 {/* cart */}
                 <div className="flex items-center gap-3 text-gray-700 hover:text-orange-500 
                  cursor-pointer transition-colors duration-200 md:hidden"
-                 onClick={()=>navigate('/my-cart')}>
+                 onClick={()=>navigate('/myorders')}>
                   <HiOutlineShoppingCart size={16} />
                   <span className="text-sm font-medium">My Orders</span>
                 </div>

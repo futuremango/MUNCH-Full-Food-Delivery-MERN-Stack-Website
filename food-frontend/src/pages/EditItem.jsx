@@ -1,291 +1,307 @@
 import React, { useState, useEffect } from "react";
-import { IoArrowBackCircleOutline } from "react-icons/io5";
-import { useDispatch} from "react-redux";
+import { IoArrowBack } from "react-icons/io5";
+import { useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import { FaUtensils, FaStore, FaImage } from "react-icons/fa";
+import { FaImage, FaEdit } from "react-icons/fa";
+import { MdCategory, MdAttachMoney } from "react-icons/md";
 import { ClipLoader } from 'react-spinners';
 import axios from "axios";
 import { serverUrl } from "../App";
 import { setGetShopData } from "../redux/ownerSlice";
-import { BiSolidCategory } from "react-icons/bi";
-import { FaMoneyCheckDollar } from "react-icons/fa6";
 
 function EditItem() {
   const navigate = useNavigate();
-  const {itemId} = useParams()
-  const [Loading, setLoading] = useState(false)
-//const { getShopData } = useSelector((state) => state.owner);
-  const [name, setName] = useState("")
+  const { itemId } = useParams();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [currentItem, setCurrentItem] = useState(null);
+  
+  const [name, setName] = useState("");
+  const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
-  const categories =[
-        "Snacks",
-        "Main Course",
-        "Dessert",
-        "Pizza",
-        "Burger",
-        "Sandwiches",
-        "Pasta",
-        "Desi Food",
-        "Fast Food",
-        "Homemade",
-        "Chinese",
-        "Bakery",
-        "Indian Food",
-        "Others",
-  ]
   const [foodType, setFoodType] = useState("");
-  const [price, setPrice] = useState("")
-  const [frontendImage, setFrontendImage] = useState("")
-  const [backendImage, setBackendImage] = useState(null)
-  const [err, setErr] = useState("")
-  const [currentItem, setCurrentItem] = useState(null)
-  const dispatch= useDispatch();
+  const [frontendImage, setFrontendImage] = useState("");
+  const [backendImage, setBackendImage] = useState(null);
+  
+  const dispatch = useDispatch();
+
+  const categories = [
+    "Snacks", "Main Course", "Dessert", "Pizza", "Burger", 
+    "Sandwiches", "Pasta", "Desi Food", "Fast Food", "Homemade", 
+    "Chinese", "Bakery", "Indian Food", "Others"
+  ];
+
+  const foodTypes = ["Veg", "Non-veg", "Drink", "Sweet", "Snack", "Other"];
 
   useEffect(() => {
-   const handleGetItemId= async()=>{
-        setLoading(true)
-    try {
-        const result = await axios.get(`${serverUrl}/api/item/get-item-by-id/${itemId}`,
-            {withCredentials:true}
-        )
-        setCurrentItem(result.data)
-        setErr("")
-        setLoading(false)
-    } catch (error) {
-       setErr(error?.response?.data?.message)
-       setLoading(false)
+    const fetchItem = async () => {
+      setLoading(true);
+      try {
+        const result = await axios.get(
+          `${serverUrl}/api/item/get-item-by-id/${itemId}`,
+          { withCredentials: true }
+        );
+        setCurrentItem(result.data);
+      } catch (error) {
+        setError(error?.response?.data?.message || "Failed to load item");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchItem();
+  }, [itemId]);
+
+  useEffect(() => {
+    if (currentItem) {
+      setName(currentItem.name || "");
+      setPrice(currentItem.price || "");
+      setCategory(currentItem.category || "");
+      setFoodType(currentItem.foodType || "");
+      setFrontendImage(currentItem.image || "");
     }
-   } 
-   handleGetItemId()
-   
-  }, [itemId])
+  }, [currentItem]);
 
-  useEffect(() => {
-       setName(currentItem?.name || "")
-       setPrice(currentItem?.price || 0)
-       setFoodType(currentItem?.foodType || "")
-       setCategory(currentItem?.category || "")
-       setFrontendImage(currentItem?.image || "")
-  }, [currentItem])
-
-  // Handle file input change
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
-    setLoading(true)
     if (file) {
-      // Create URL for frontend preview
       const imageUrl = URL.createObjectURL(file);
       setFrontendImage(imageUrl);
-      // You can set backendImage to the actual file for form submission
       setBackendImage(file);
-      setLoading(false)
     }
   };
 
-  const handleSubmit =async (e)=>{
-    setLoading(true)
-    e.preventDefault()
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    
     try {
-       const formData = new FormData()
-       formData.append("name", name)
-       formData.append("price", price)
-       formData.append("foodType", foodType)
-       formData.append("category", category)
-       if(backendImage){
-        formData.append("image",backendImage)
-       }
-       const result= await axios.put(`${serverUrl}/api/item/edit-item/${itemId}`,formData,{withCredentials:true})
-       dispatch(setGetShopData(result.data))
-       setErr("")
-       setLoading(false)
-       navigate('/')
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("price", price);
+      formData.append("foodType", foodType);
+      formData.append("category", category);
+      
+      if (backendImage) {
+        formData.append("image", backendImage);
+      }
+      
+      const result = await axios.put(
+        `${serverUrl}/api/item/edit-item/${itemId}`,
+        formData,
+        { withCredentials: true }
+      );
+      
+      dispatch(setGetShopData(result.data));
+      navigate('/');
     } catch (error) {
-        console.log("Error details:", error) // Debug log
-       setErr(error?.response?.data?.message)
-       setLoading(false)
+      setError(error?.response?.data?.message || "Failed to update item");
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (loading && !currentItem) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center">
+        <ClipLoader size={40} color="#f97316" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-[#fff9f6] flex items-center justify-center p-4 md:p-6 relative">
-      
-      {/* Back Button */}
-      <button
-        onClick={() => navigate("/")}
-        className="absolute top-6 left-4 md:left-6 z-10 group">
-        <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-2xl p-3 shadow-lg border border-orange-100 hover:shadow-xl transition-all duration-300 hover:bg-white">
-          <IoArrowBackCircleOutline size={24} className="text-[#ec4a09] font-mulish-extrabold group-hover:scale-110 transition-transform" />
-          <span className="text-sm font-semibold text-gray-700 hidden sm:block">Back</span>
-        </div>
-      </button>
-
-      {/* Main Card */}
-      <div className="w-full max-w-2xl bg-white/95 backdrop-blur-sm shadow-2xl rounded-3xl border border-orange-100 overflow-hidden">
-        
-        {/* Header Section */}
-        <div className="bg-linear-to-r from-orange-500 to-red-500 p-8 text-center">
-          <div className="flex justify-center mb-4">
-            <div className="bg-white/20 p-6 rounded-full backdrop-blur-sm">
-              <FaUtensils className="text-white w-12 h-12 sm:w-16 sm:h-16" />
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-lg">
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-6">
+          <button
+            onClick={() => navigate("/")}
+            className="p-2.5 bg-white text-orange-600 rounded-xl hover:bg-orange-50 
+              transition-colors duration-200 shadow-sm hover:shadow"
+          >
+            <IoArrowBack size={22} />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Edit Menu Item</h1>
+            <p className="text-gray-500 text-sm">Update your item details</p>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-mulish-extrabold text-white">
-            Edit Menu Item
-          </h1>
-          <p className="text-orange-100 font-mulish-extrabold mt-2 text-sm sm:text-base">
-            Update the details of this item
-          </p>
         </div>
 
-        {/* Form Section */}
-        <div className="p-6 sm:p-8">
-          <form onSubmit={handleSubmit} className="font-mulish-extrabold space-y-6">
-            
-            {/* Showing Error */}
-            {err && (
-              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-xl text-center">
-                {err}
+        {/* Form Card */}
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          {/* Header Gradient */}
+          <div className="bg-gradient-to-r from-orange-500 to-red-500 p-6 text-center">
+            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center 
+              justify-center mx-auto mb-4 backdrop-blur-sm">
+              <FaEdit className="text-white text-2xl" />
+            </div>
+            <h2 className="text-xl font-bold text-white">Edit Item</h2>
+            <p className="text-orange-100 text-sm mt-1">Update your menu item</p>
+          </div>
+
+          {/* Form Content */}
+          <div className="p-6">
+            {error && (
+              <div className="mb-5 p-3 bg-red-50 border border-red-200 text-red-600 
+                rounded-xl text-center text-sm">
+                {error}
               </div>
             )}
 
-            {/* Item Name */}
-            <div className="group">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
-               <FaStore className="text-[#ec4a09]" size={16} />
-                 Item Name
-              </label>
-              <input
-                type="text"
-                value={name}
-                className="w-full border-2 border-gray-200 rounded-2xl px-5 py-4 focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all duration-300 bg-white/70 placeholder-gray-400 text-gray-800 font-medium group-hover:border-orange-300"
-                placeholder="Updated Item name"
-                onChange={(e)=>setName(e.target.value)}
-                required
-              />
-            </div>
-
-             {/* Price */}
-              <div className="space-y-2">
-             <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
-              <FaMoneyCheckDollar className="text-[#ec4a09]" size={16} />
-                 Item Price
-              </label>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Item Name */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Item Name
+                </label>
                 <input
-                  type="Number"
-                  value={price}
-                  className="w-full border-2 border-gray-200 rounded-2xl px-5 py-4 focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all duration-300 bg-white/70 placeholder-gray-400 text-gray-800 font-medium group-hover:border-orange-300"
-                  placeholder="Updated Price"
-                  onChange={(e)=>setPrice(e.target.value)}
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3
+                    focus:outline-none focus:ring-2 focus:ring-orange-500 
+                    focus:border-transparent transition-all bg-gray-50 
+                    placeholder-gray-400 text-gray-800"
+                  placeholder="Enter item name"
                   required
                 />
               </div>
 
-            {/* Item Image */}
-            <div className="group">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
-                <FaImage className="text-[#ec4a09]" size={16} />
-                 Item Image
-              </label>
-              
-              {/* File Input */}
-              <div className="relative">
-                <input
-                  type="file"
-                  onChange={handleImageUpload}
-                  className="w-full border-2 border-gray-200 rounded-2xl px-5 py-4 focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all duration-300 bg-white/70 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 group-hover:border-orange-300"
-                  accept="image/*"
-                />
-              </div>
-              
-              {/* Image Preview - MOVED OUTSIDE the file input div */}
-              {frontendImage && (
-                <div className="mt-4 transition-all duration-300">
-                  <p className="text-sm text-gray-600 mb-2">Image Preview:</p>
-                  <img 
-                    src={frontendImage} 
-                    alt="Shop Preview" 
-                    className="w-full max-w-xs h-48 object-cover rounded-2xl border-2 border-orange-200 shadow-lg mx-auto" 
+              {/* Price */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Price (Rs.)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 
+                    text-gray-400">
+                    Rs.
+                  </span>
+                  <input
+                    type="number"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl 
+                      pl-10 pr-4 py-3 focus:outline-none focus:ring-2 
+                      focus:ring-orange-500 focus:border-transparent 
+                      transition-all bg-gray-50 placeholder-gray-400 
+                      text-gray-800"
+                    placeholder="0.00"
+                    required
+                    min="0"
                   />
                 </div>
-              )}
-            </div>
+              </div>
 
-            {/* Category Section */}
-            <div className="group">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
-                <BiSolidCategory className="text-[#ec4a09]" size={16} />
-                   Item Category
-              </label>
-              
+              {/* Image Upload */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Item Image
+                </label>
+                <div className="border-2 border-dashed border-gray-300 rounded-xl 
+                  p-4 text-center hover:border-orange-400 transition-colors 
+                  cursor-pointer bg-gray-50">
+                  <input
+                    type="file"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="image-upload"
+                    accept="image/*"
+                  />
+                  <label htmlFor="image-upload" className="cursor-pointer">
+                    <div className="flex flex-col items-center">
+                      <FaImage className="text-gray-400 text-2xl mb-2" />
+                      <p className="text-sm text-gray-600">Change image</p>
+                      <p className="text-xs text-gray-400 mt-1">Click to upload new image</p>
+                    </div>
+                  </label>
+                </div>
+                
+                {frontendImage && (
+                  <div className="mt-3">
+                    <p className="text-sm text-gray-600 mb-2">Current Image:</p>
+                    <img 
+                      src={frontendImage} 
+                      alt="Item preview" 
+                      className="w-full h-40 object-cover rounded-xl border border-gray-200"
+                    />
+                  </div>
+                )}
+              </div>
+
               {/* Category & Food Type */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Category
+                  </label>
                   <select
                     value={category}
-                    className="w-full border-2 border-gray-200 rounded-2xl px-5 py-4 focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all duration-300 bg-white/70 placeholder-gray-400 text-gray-800 font-medium group-hover:border-orange-300"
-                    onChange={(e)=>setCategory(e.target.value)}
-                    required> 
-                    <option value="">Select Food Category</option>
-                    {categories.map((cat,index)=>(
-                        <option value={cat} key={index}>{cat}</option>
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3
+                      focus:outline-none focus:ring-2 focus:ring-orange-500 
+                      focus:border-transparent transition-all bg-gray-50 
+                      text-gray-800"
+                    required
+                  >
+                    <option value="">Select Category</option>
+                    {categories.map((cat, index) => (
+                      <option key={index} value={cat}>{cat}</option>
                     ))}
                   </select>
                 </div>
-                <div className="space-y-2">
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Food Type
+                  </label>
                   <select
                     value={foodType}
-                    className="w-full border-2 border-gray-200 rounded-2xl
-                     px-5 py-4 focus:outline-none focus:border-orange-500
-                      focus:ring-4 focus:ring-orange-100 transition-all 
-                      duration-300 bg-white/70 placeholder-gray-400 text-gray-800 
-                      font-medium group-hover:border-orange-300"
-                    onChange={(e)=>setFoodType(e.target.value)}
-                    required>
-                    <option value="">Select Food Type</option>
-                    <option value="Veg">Veg</option>
-                    <option value="Non-veg">Non-Veg</option>
-                    <option value="Drink">Drink</option>
-                    <option value="Sweet">Sweet</option>
-                    <option value="Snack">Snack</option>
-                    <option value="Other">Other</option>
-                    </select>
+                    onChange={(e) => setFoodType(e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3
+                      focus:outline-none focus:ring-2 focus:ring-orange-500 
+                      focus:border-transparent transition-all bg-gray-50 
+                      text-gray-800"
+                    required
+                  >
+                    <option value="">Select Type</option>
+                    {foodTypes.map((type, index) => (
+                      <option key={index} value={type}>{type}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
+
+              {/* Submit Button */}
+              <button 
+                type="submit" 
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-orange-500 to-red-500 
+                  text-white font-semibold py-3.5 rounded-xl transition-all 
+                  duration-300 hover:shadow-lg hover:scale-[1.02] disabled:opacity-50 
+                  disabled:cursor-not-allowed disabled:hover:scale-100 
+                  disabled:hover:shadow-none"
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <ClipLoader size={18} color="white" />
+                    <span>Updating...</span>
+                  </div>
+                ) : (
+                  "Update Item"
+                )}
+              </button>
+            </form>
+
+            {/* Footer Note */}
+            <div className="mt-6 pt-5 border-t border-gray-100">
+              <p className="text-xs text-gray-500 text-center">
+                Changes will be visible to customers immediately
+              </p>
             </div>
-
-            {/* Submit Button */}
-            <button 
-              type="submit" 
-              disabled={Loading}
-              className="w-full bg-linear-to-r from-orange-500
-               to-red-500 text-white font-mulish-extrabold text-lg 
-               py-5 rounded-2xl transition-all duration-300 hover:from-orange-600
-               hover:to-red-600 hover:shadow-2xl transform hover:-translate-y-1 
-               active:translate-y-0 disabled:opacity-50 disabled:transform-none 
-               disabled:hover:shadow-none group">
-              {Loading ? (
-                <div className="flex items-center justify-center gap-3">
-                  <ClipLoader size={20} color="white" />
-                  <span>Updating Item Details...</span>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center gap-2">
-                     Update details
-                </div>
-              )}
-            </button>
-
-          </form>
-
-          {/* Additional Info */}
-          <div className="text-center mt-6">
-            <p className="text-xs font-mulish-extrabold text-gray-500">
-              By continuing, you agree to our Terms of Service and Privacy Policy
-            </p>
           </div>
-
         </div>
-        
       </div>
     </div>
   );
