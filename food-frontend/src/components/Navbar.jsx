@@ -72,7 +72,7 @@ function Navbar() {
     <div className="w-full h-20 flex bg-[#fff9f6] items-center justify-between md:justify-center gap-6 px-6 fixed top-0 z-50 border-b border-orange-100 shadow-sm">
 
       {/* Heading */}
-      {userData.role==="user"? <div className="flex items-center">
+      {userData.role==="user" || userData.role ==="deliveryBoy" ? <div className="flex items-center">
           <h1 className="font-super-woobly flex text-3xl font-bold bg-linear-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
             Munch
           </h1>
@@ -227,6 +227,7 @@ function Navbar() {
 ) : (
           <>
          {/* Cart */}
+        {userData.role==="user" && 
         <div className="relative cursor-pointer group" onClick={()=>navigate('/my-cart')}>
           <HiOutlineShoppingCart
             size={26}
@@ -236,6 +237,7 @@ function Navbar() {
             {cartItems.length}
           </span>
         </div>
+        }
 
          {/* My Orders button */}
         <button className="hidden md:block px-4 py-2.5 text-sm font-semibold rounded-xl 
@@ -282,12 +284,12 @@ function Navbar() {
               {/* Menu Items */}
               <div className="space-y-2 pt-3">
                 {/* cart */}
-                <div className="flex items-center gap-3 text-gray-700 hover:text-orange-500 
+                { userData.role === "user" && <div className="flex items-center gap-3 text-gray-700 hover:text-orange-500 
                  cursor-pointer transition-colors duration-200 md:hidden"
                  onClick={()=>navigate('/myorders')}>
                   <HiOutlineShoppingCart size={16} />
                   <span className="text-sm font-medium">My Orders</span>
-                </div>
+                </div>}
                 
                 {/* profile */}
                 <div

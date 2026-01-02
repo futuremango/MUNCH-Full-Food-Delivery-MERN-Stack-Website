@@ -94,7 +94,7 @@ function UserDashboard() {
   
   return (
     <div className="w-screen min-h-screen font-mulish-regular flex flex-col 
-    items-center bg-gradient-to-b from-orange-50 to-white overflow-y-auto">
+    items-center bg-linear-to-b from-orange-50 to-white overflow-y-auto">
       <Navbar/>
 
       {/* Main Content Container */}
@@ -141,7 +141,7 @@ function UserDashboard() {
               </div>
             </div>
           ) : (
-            <div className="text-center py-10 bg-gradient-to-r from-orange-50 to-white rounded-2xl border border-orange-100">
+            <div className="text-center py-10 bg-linear-to-r from-orange-50 to-white rounded-2xl border border-orange-100">
               <div className="max-w-md mx-auto">
                 <div className="text-[#ec4a09] text-5xl mb-4"><FaShopSlash className="mx-auto block"/></div>
                 <h3 className="text-gray-700 text-lg font-semibold">
@@ -235,7 +235,7 @@ function UserDashboard() {
               </h1>
               <p className="text-gray-600 text-sm mt-1">Popular items from local shops</p>
             </div>
-            <div className="text-center py-10 bg-gradient-to-r from-orange-50 to-white rounded-2xl border border-orange-100">
+            <div className="text-center py-10 bg-linear-to-r from-orange-50 to-white rounded-2xl border border-orange-100">
               <div className="max-w-md mx-auto">
                 <div className="text-[#ec4a09] text-5xl mb-4"><MdNoFood className="mx-auto block"/></div>
                 <h3 className="text-gray-700 text-lg font-semibold">No items found yet</h3>

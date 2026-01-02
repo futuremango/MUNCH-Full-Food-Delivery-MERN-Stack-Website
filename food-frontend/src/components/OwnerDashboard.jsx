@@ -46,7 +46,7 @@ function OwnerDashboard() {
                 <div className="flex justify-center items-center min-h-[60vh] p-4">
                   <div className="w-full max-w-md bg-white shadow-lg rounded-2xl p-8 border border-orange-100">
                     <div className="flex flex-col items-center text-center">
-                      <div className="w-20 h-20 rounded-full bg-gradient-to-r from-orange-100 to-red-100 flex items-center justify-center mb-5">
+                      <div className="w-20 h-20 rounded-full bg-linear-to-r from-orange-100 to-red-100 flex items-center justify-center mb-5">
                         <FaStore className="text-orange-500 text-3xl" />
                       </div>
                       <h2 className="text-2xl font-bold text-gray-800 mb-3">Add your Restaurant</h2>
@@ -55,7 +55,7 @@ function OwnerDashboard() {
                       </p>
                       <button
                         onClick={() => navigate("/create-edit-shop")}
-                        className="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                        className="px-6 py-3 bg-linear-to-r from-orange-500 to-red-500 text-white rounded-full font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                       >
                         Get Started
                       </button>
@@ -67,12 +67,12 @@ function OwnerDashboard() {
                   {/* Header */}
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center shadow-lg">
+                      <div className="w-14 h-14 rounded-xl bg-linear-to-r from-orange-500 to-red-500 flex items-center justify-center shadow-lg">
                         <FaStore className="text-white text-2xl" />
                       </div>
                       <div>
                         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-                          Welcome to <span className="text-transparent bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text">{getShopData.name}</span>
+                          Welcome to <span className="text-transparent bg-linear-to-r from-orange-600 to-red-600 bg-clip-text">{getShopData.name}</span>
                         </h1>
                         <p className="text-gray-600 mt-1">Manage your restaurant and track performance</p>
                       </div>
@@ -141,7 +141,7 @@ function OwnerDashboard() {
                             alt={getShopData.name}
                             className="w-full h-full object-cover"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
+                          <div className="absolute inset-0 bg-linear-to-t from-black/10 to-transparent"></div>
                           <button
                             onClick={() => navigate("/create-edit-shop")}
                             className="absolute top-4 right-4 bg-white text-gray-700 px-3 py-2 rounded-lg font-medium text-sm hover:bg-gray-50 transition-colors shadow-sm"
@@ -222,7 +222,7 @@ function OwnerDashboard() {
                       </div>
                       <button
                         onClick={() => navigate("/add-item")}
-                        className="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg font-medium hover:shadow-md transition-shadow"
+                        className="px-4 py-2 bg-linear-to-r from-orange-500 to-red-500 text-white rounded-lg font-medium hover:shadow-md transition-shadow"
                       >
                         Add New
                       </button>
@@ -237,7 +237,7 @@ function OwnerDashboard() {
                         <p className="text-gray-400 text-sm mb-6">Start by adding your first menu item</p>
                         <button
                           onClick={() => navigate("/add-item")}
-                          className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg font-medium hover:shadow-md transition-shadow"
+                          className="px-5 py-2.5 bg-linear-to-r from-orange-500 to-red-500 text-white rounded-lg font-medium hover:shadow-md transition-shadow"
                         >
                           Add First Item
                         </button>

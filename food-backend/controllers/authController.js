@@ -38,7 +38,7 @@ export const signup = async (req, res)=>{
     }catch(error){
         return res.status(500).json(`Error while signing up user ${error}`);
     }
-}
+};
 
 export const signIn = async (req, res)=>{
     try{
@@ -67,7 +67,7 @@ export const signIn = async (req, res)=>{
     }catch(error){
         return res.status(500).json(`Error while Signing In... ${error}`);
     }
-}
+};
 
 export const signOut = async (req, res)=>{
     try {
@@ -76,7 +76,7 @@ export const signOut = async (req, res)=>{
     } catch (error) {
         return res.status(500).json(`Error while Signing Out... ${error}`)
     }
-}
+};
 
 export const sendOTP = async (req, res) => {
     try {
@@ -103,7 +103,7 @@ export const sendOTP = async (req, res) => {
         console.error("OTP sending error:", error);
         return res.status(500).json(`Error sending OTP. ${error}`);
     }
-}
+};
 
 export const verifyOTP = async (req, res)=>{
     try {
@@ -121,7 +121,7 @@ export const verifyOTP = async (req, res)=>{
     } catch (error) {
         return res.status(500).json(`Error Verifying OTP. ${error}`);
     }
-}
+};
 
 export const resetPassword = async (req, res)=>{
     try {
@@ -138,7 +138,7 @@ export const resetPassword = async (req, res)=>{
     } catch (error) {
         return res.status(500).json(`Error Resetting Password ${error}`)
     }
-}
+};
 
 export const googleAuth = async (req, res)=>{
     try {
@@ -163,4 +163,4 @@ export const googleAuth = async (req, res)=>{
     }catch(error){
         return res.status(500).json(`Error Google Auth... ${error}`);
     }
-}
+};

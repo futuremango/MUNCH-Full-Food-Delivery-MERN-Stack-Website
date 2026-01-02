@@ -13,7 +13,7 @@ const deliveryAssignmentSchema = new mongoose.Schema({
         type:mongoose.Schema.Types.ObjectId,
         required:true
     },
-    broadcastedTo:[{
+    brodcastedTo:[{
         type: mongoose.Schema.Types.ObjectId,
         ref:"User"
     }],
@@ -24,8 +24,8 @@ const deliveryAssignmentSchema = new mongoose.Schema({
     },
     status:{
         type:String,
-        enum:["broadcasted", "assigned", "completed"],
-        default:"broadcasted"
+        enum:["brodcasted", "assigned", "completed"],
+        default:"brodcasted"
     },
     acceptedAt:Date,
 },{timestamps:true})

@@ -41,12 +41,12 @@ function SuggestedItems({ data }) {
 
   return (
     <div className="relative group w-full">
-      <div className="absolute inset-0 bg-gradient-to-br from-orange-50/0 to-orange-100/0 group-hover:to-orange-100/30 rounded-2xl transition-all duration-300"></div>
+      <div className="absolute inset-0 bg-linear-to-br from-orange-50/0 to-orange-100/0 group-hover:to-orange-100/30 rounded-2xl transition-all duration-300"></div>
       
       <div className="relative bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 group-hover:border-orange-200 flex flex-col h-full">
         
         {/* Image Container */}
-        <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="relative aspect-square overflow-hidden bg-linear-to-br from-gray-50 to-gray-100">
           <img
             src={data.image}
             alt={data.name}

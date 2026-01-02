@@ -176,4 +176,4 @@ export const getItemsByCity = async (req, res) => {
     console.error("❌ Error in getItemsByCity:", error);
     return res.status(500).json({message: `Server Error: ${error.message}`});
   }
-}
+};

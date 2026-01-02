@@ -57,7 +57,6 @@ export const getShop = async (req, res) => {
   }
 };
 
-// shopController.js - UPDATED getShopCity
 export const getShopCity = async (req, res) => {
   try {
     const { city } = req.params;
@@ -66,12 +65,10 @@ export const getShopCity = async (req, res) => {
       return res.status(200).json([]);
     }
     
-    // ✅ NORMALIZE CITY NAME
     const normalizeCity = (cityName) => {
       if (!cityName) return "";
       const normalized = cityName.toLowerCase().trim();
       
-      // Map variations to standard names
       const cityMap = {
         'wah': 'wah cantt',
         'wah cantt': 'wah cantt',
@@ -90,7 +87,6 @@ export const getShopCity = async (req, res) => {
     
     console.log(`🔍 Searching shops for city: "${city}" → normalized: "${normalizedCity}"`);
     
-    // ✅ FIND SHOPS WITH FLEXIBLE MATCHING
     const shops = await Shop.find({
       $or: [
         { city: { $regex: new RegExp(`^${normalizedCity}$`, "i") } },
@@ -99,11 +95,11 @@ export const getShopCity = async (req, res) => {
       ]
     }).populate('items').populate('owner', 'name email');
     
-    console.log(`✅ Found ${shops.length} shops for "${city}"`);
+    console.log(` Found ${shops.length} shops for "${city}"`);
     
     return res.status(200).json(shops);
   } catch (error) {
     console.error("❌ Error in getShopCity:", error);
     return res.status(500).json({message: `Server Error: ${error.message}`});
   }
-}
+};

@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaBox, FaChevronDown, FaChevronUp } from 'react-icons/fa'
+import React, { useState, useEffect } from 'react'
+import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaBox, FaChevronDown, FaChevronUp, FaUser } from 'react-icons/fa'
 import { MdRestaurant, MdEdit, MdCheckCircle, MdCancel } from 'react-icons/md'
 import axios from 'axios'
 import { serverUrl } from '../App'
@@ -24,6 +24,15 @@ function OwnerOrdersCard({ data, onStatusUpdate, onOrderUpdate}) {
     const [showStatusDropdown, setShowStatusDropdown] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
     const [currentStatus, setCurrentStatus] = useState(shopOrder?.status || "pending");
+    const [availableBoys, setAvailableBoys] = useState([]);
+    const [acceptedDeliveryBoy, setAcceptedDeliveryBoy] = useState(shopOrder?.assignedDeliveryBoy || null);
+    
+    // Track accepted delivery boy
+    useEffect(() => {
+        if (shopOrder?.assignedDeliveryBoy) {
+            setAcceptedDeliveryBoy(shopOrder.assignedDeliveryBoy);
+        }
+    }, [shopOrder]);
 
     const statusConfig = {
         "pending": { 
@@ -58,7 +67,6 @@ function OwnerOrdersCard({ data, onStatusUpdate, onOrderUpdate}) {
 
     const status = statusConfig[currentStatus] || statusConfig.pending;
 
-    // Calculate total from shop order items
     const calculateTotal = () => {
         if (!shopOrder?.shopOrderItems) return 0;
         return shopOrder.shopOrderItems.reduce((sum, item) => 
@@ -102,7 +110,7 @@ function OwnerOrdersCard({ data, onStatusUpdate, onOrderUpdate}) {
             setShowStatusDropdown(false);
 
             // Send update to backend
-            const response = await axios.put(`${serverUrl}/api/order/update-status`, {
+            const result = await axios.put(`${serverUrl}/api/order/update-status`, {
                 orderId: _id,
                 shopId: shopId,
                 status: newStatus
@@ -110,21 +118,23 @@ function OwnerOrdersCard({ data, onStatusUpdate, onOrderUpdate}) {
 
             // Update parent component
             if (onStatusUpdate) {
-                onStatusUpdate(response.data.order || data);
+                onStatusUpdate(result.data.order || data);
             }
             
             // Trigger order refresh for user side
             if (onOrderUpdate) {
                 onOrderUpdate(); // This will trigger refetch in MyOrders
             }
-
+            setAvailableBoys(result.data.availableBoys || [])
+            
+            console.log("Full response:", result.data);
+            console.log("Available boys:", result.data.availableBoys);
         } catch (error) {
             console.log(error)
         } finally {
             setIsUpdating(false);
         }
     };
-
 
     return (
         <div className='bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow transition-all duration-200 p-4'>
@@ -176,8 +186,7 @@ function OwnerOrdersCard({ data, onStatusUpdate, onOrderUpdate}) {
                                                 else if (action === "Mark as Ready") handleStatusUpdate("out for delivery");
                                                 else if (action === "Mark as Delivered") handleStatusUpdate("delivered");
                                             }}
-                                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors flex items-center gap-2"
-                                        >
+                                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors flex items-center gap-2">
                                             {action === "Accept" && <MdCheckCircle className="text-green-600" />}
                                             {action === "Decline" && <MdCancel className="text-red-600" />}
                                             {action === "Mark as Ready" && <MdEdit className="text-amber-600" />}
@@ -191,6 +200,80 @@ function OwnerOrdersCard({ data, onStatusUpdate, onOrderUpdate}) {
                     )}
                 </div>
             </div>
+
+            {currentStatus === "out for delivery" && (
+                <div className='mb-4 p-3 border border-orange-200 rounded-lg bg-orange-50'>
+                    <div className="flex items-center justify-between mb-2">
+                        <p className="font-medium text-orange-800 text-sm">
+                            Delivery Assignment Status
+                        </p>
+                        <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
+                            {acceptedDeliveryBoy 
+                                ? 'Assigned ✓' 
+                                : availableBoys.length > 0 
+                                    ? `${availableBoys.length} available` 
+                                    : 'No riders'}
+                        </span>
+                    </div>
+                    
+                    {/* Show accepted delivery boy */}
+                    {acceptedDeliveryBoy ? (
+                        <div className="space-y-2">
+                            <p className="text-xs text-orange-600 mb-2">
+                                Delivery has been accepted by:
+                            </p>
+                            <div className="p-3 bg-white rounded-lg border border-green-200">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                                            <FaUser className="text-green-600" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-800">
+                                                {typeof acceptedDeliveryBoy === 'object' 
+                                                    ? acceptedDeliveryBoy.fullName || 'Delivery Partner'
+                                                    : 'Delivery Partner'}
+                                            </p>
+                                            {typeof acceptedDeliveryBoy === 'object' && acceptedDeliveryBoy.mobile && (
+                                                <p className="flex text-xs text-gray-500 mt-1 gap-2">
+                                                 <FaPhone/> {acceptedDeliveryBoy.mobile}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
+                                        Assigned ✓
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    ) : availableBoys.length > 0 ? (
+                        <div className="space-y-2">
+                            <p className="text-xs text-orange-600 mb-2">
+                                The following delivery boys have been notified:
+                            </p>
+                            {availableBoys.map((boy, index) => (
+                                <div key={index} className="flex items-center justify-between p-2 bg-white rounded border border-orange-100">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-800">{boy.fullName}</p>
+                                        <p className="text-xs text-gray-500">{boy.mobile}</p>
+                                    </div>
+                                    <span className="text-xs text-green-600 font-medium">Available</span>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-2">
+                            <p className="text-sm text-gray-600 font-mulish-regular font-semibold">
+                                Sorry, no delivery boys available in your area currently.
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                                The order will remain in "out for delivery" status until a rider accepts.
+                            </p>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Customer & Address */}
             <div className="flex flex-col sm:flex-row gap-4 mb-4">

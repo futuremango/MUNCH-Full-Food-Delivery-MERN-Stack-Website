@@ -15,7 +15,7 @@ function useUpdateLocation() {
             const result = await axios.post(`${serverUrl}/api/user/update-location`,{lat, lng},{withCredentials:true});
             console.log(result.data)
        }
-       navigator.geolocation.watchPosition((pos)=>{
+       navigator.geolocation?.watchPosition((pos)=>{
         updateLocation(pos.coords.latitude, pos.coords.longitude)
        })
     }, [userData]);

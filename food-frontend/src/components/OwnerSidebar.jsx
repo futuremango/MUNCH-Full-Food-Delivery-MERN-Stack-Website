@@ -64,7 +64,7 @@ function OwnerSidebar() {
       {/* Logo/Heading */}
       <div className="p-5 border-b border-gray-100">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 
+          <div className="w-10 h-10 rounded-xl bg-linear-to-br from-orange-500 to-red-500 
             flex items-center justify-center shadow-md">
             <FaStore className="text-white" size={20} />
           </div>
@@ -111,7 +111,7 @@ function OwnerSidebar() {
               </div>
               {pendingOrdersCount > 0 && (
                 <span className="text-xs font-semibold bg-orange-500 text-white 
-                  rounded-full px-2 py-0.5 min-w-[20px] text-center">
+                  rounded-full px-2 py-0.5 min-w-5 text-center">
                   {pendingOrdersCount}
                 </span>
               )}
@@ -144,7 +144,7 @@ function OwnerSidebar() {
       <div className="p-4 border-t border-gray-100 bg-gray-50/50">
         {/* User Info */}
         <div className="flex items-center gap-3 p-3 rounded-lg bg-[#fff9f6] border border-gray-100 shadow-sm mb-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-red-500 
+          <div className="w-10 h-10 rounded-full bg-linear-to-br from-orange-500 to-red-500 
             flex items-center justify-center text-white font-semibold text-sm shadow">
             {userData?.fullName?.charAt(0)?.toUpperCase() || "U"}
           </div>

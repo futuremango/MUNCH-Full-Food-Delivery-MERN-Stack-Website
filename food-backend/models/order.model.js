@@ -37,11 +37,13 @@ const shopOrderSchema = new mongoose.Schema({
     assignedDeliveryBoy:{
         type: mongoose.Schema.Types.ObjectId,
         ref:"User",
+    },
+    assignedDeliveryBoyAt: {  
+        type: Date
     }
 }, {timestamps:true});
 
 
-//Schema for the main order
 const orderSchema = new mongoose.Schema({
     user:{
         type: mongoose.Schema.Types.ObjectId,
