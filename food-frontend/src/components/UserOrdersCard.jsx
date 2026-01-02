@@ -1,9 +1,10 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom';
 
 function UserOrdersCard({ data, onOrderUpdate }) {
     const { _id, createdAt, totalAmount, paymentMethod, deliveryAddress, shopOrders } = data;
     const shortOrderId = _id?.slice(-8).toUpperCase();
-    
+    const navigate = useNavigate();
     const orderDate = new Date(createdAt).toLocaleDateString('en-GB', {
         day: 'numeric',
         month: 'short',
@@ -145,7 +146,10 @@ function UserOrdersCard({ data, onOrderUpdate }) {
                         <button className='px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors'>
                             View Details
                         </button>
-                        <button className='px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors'>
+                        <button className='px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm
+                         font-medium rounded-lg transition-colors'
+                         onClick={()=>navigate(`/trackorder/${data._id}`)}
+                         >
                             Track Order
                         </button>
                     </div>

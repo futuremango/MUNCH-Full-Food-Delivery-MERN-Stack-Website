@@ -61,8 +61,16 @@ const userSlice = createSlice({
        updateMyOrder:(state, action)=>{
         state.myOrders=[action.payload,...state.myOrders]
        },
+       updateUserLocation: (state, action) => {
+            if (state.userData) {
+                state.userData.location = {
+                    type: 'Point',
+                    coordinates: action.payload.coordinates // [longitude, latitude]
+                };
+            }
+       },
     }
 })
 
-export const {setUserData, setGetCity, setGetState, setGetAddress, setGetShopsinCity, setGetItemsinCity, addToCart, updateQuantityInCart, removeItemInCart, setMyOrders, updateMyOrder} = userSlice.actions
+export const {setUserData, setGetCity, setGetState, setGetAddress, setGetShopsinCity, setGetItemsinCity, addToCart, updateQuantityInCart, removeItemInCart, setMyOrders, updateMyOrder, updateUserLocation} = userSlice.actions
 export default userSlice.reducer

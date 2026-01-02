@@ -21,6 +21,13 @@ export const getCurrentUser=async(req, res)=>{
 export const updateUserLocation=async (req, res) => {
     try {
         const { lat, lng }=req.body;
+
+        if (lat === 0 && lng === 0) {
+            return res.status(400).json({ 
+                message: 'Invalid coordinates (0,0)' 
+            });
+        }
+        
         if (!lat || !lng) {
             return res.status(400).json({ 
                 message: 'Latitude and longitude are required' 

@@ -408,6 +408,33 @@ export const getCurrentOrder = async (req, res) =>{
     } catch (error) {
         return res.status(500).json({message:"get Current Order Not Found."})
     }
-}
+};
+
+export const getOrderById = async (req, res) => {
+    try {
+        const { orderId } = req.params
+        const order = await Order.findById(orderId)
+        .populate("user")
+        .populate({
+            path:"shopOrders.shop",
+            model:"Shop"
+        })
+        .populate({
+            path:"shopOrders.assignedDeliveryBoy",
+            model:"User"
+        })
+        .populate("shopOrders.shopOrderItems.item", "name image price")
+        .lean()
+
+        if(!order){
+            return res.status(400).json({message: "Order Not FOund"})
+        }
+        return res.status(200).json(order)
+    } catch (error) {
+        res.status(500).json({ 
+            message: `Error get order by ID(track): ${error.message}` 
+        });
+    }
+};
 
 
