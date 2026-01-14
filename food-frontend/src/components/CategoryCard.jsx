@@ -1,11 +1,13 @@
 import React from 'react'
 
-function CategoryCard({ name, image }) {
+function CategoryCard({ name, image, onClick, isActive }) {
   return (
-    <div className="group relative w-[160px] h-[160px] md:w-[220px] md:h-[220px] 
-                    rounded-full overflow-hidden flex-shrink-0 cursor-pointer
-                    border-4 border-gray-200 hover:border-[#ec4a09]
-                    transition-all duration-300 hover:scale-[1.02] font-mulish-regular ">
+    <div className={`group relative w-[160px] h-[160px] md:w-[220px] md:h-[220px] 
+                  rounded-full overflow-hidden flex-shrink-0 cursor-pointer
+                  border-4 ${isActive ? 'border-[#ec4a09]' : 'border-gray-200'} 
+                  hover:border-[#ec4a09] transition-all duration-300 hover:scale-[1.02] font-mulish-regular`}
+                    onClick={onClick}
+                    >
       {/* Container */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 z-10"></div>
       
@@ -38,6 +40,11 @@ function CategoryCard({ name, image }) {
       {/* hover affect */}
       <div className="absolute inset-0 bg-gradient-to-t from-orange-500/0 via-orange-400/0 to-orange-300/0 
                       group-hover:via-orange-400/10 group-hover:to-orange-300/20 transition-all duration-500 rounded-xl"></div>
+    {isActive && (
+        <div className="absolute top-2 right-2 z-30 w-6 h-6 bg-[#ec4a09] rounded-full flex items-center justify-center">
+          <span className="text-white text-xs">✓</span>
+        </div>
+      )}
     </div>
   )
 }

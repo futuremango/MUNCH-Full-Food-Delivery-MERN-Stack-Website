@@ -9,18 +9,20 @@ import { MdAdd } from "react-icons/md";
 import { TbReceiptDollar } from "react-icons/tb";
 import { serverUrl } from "../App";
 import { useDispatch } from "react-redux";
-import { setUserData } from "../redux/userSlice";
+import { setSearchItems, setUserData } from "../redux/userSlice";
 import { useNavigate } from "react-router-dom";
 import CitySelector from './CitySelector';
 
 function Navbar() {
 
   //useStates used
-  const { userData , cartItems, myOrders } = useSelector((state) => state.user);
+  const { userData , cartItems, myOrders, getCity } = useSelector((state) => state.user);
   const { getShopData } = useSelector((state) => state.owner);
   const [showPopup, setShowPopup] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [Loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
 
   //refs to close outside when clicked
   const popupRef = useRef(null);
@@ -68,16 +70,44 @@ function Navbar() {
     order.shopOrders?.[0]?.status === "pending"
   ).length || 0;
 
+  const searchBar = async (query) => {
+    try {
+      const response = await axios.get(`${serverUrl}/api/item/searchbar?query=${query}&city=${getCity}`, {
+        withCredentials: true,
+      });
+      console.log("Search Response:", response.data);
+      dispatch(setSearchItems(response.data));
+    } catch (error) {
+      console.log(error)
+    }
+  };
+  
+
+useEffect(() => {
+  const timeoutId = setTimeout(() => {
+    if (searchQuery.trim()) {
+      setIsSearching(true);
+      searchBar(searchQuery).finally(() => setIsSearching(false));
+    } else {
+      dispatch(setSearchItems(null));
+    }
+  }, 300); // 300ms debounce
+
+  return () => clearTimeout(timeoutId);
+}, [searchQuery]);
+
   return (
     <div className="w-full h-20 flex bg-[#fff9f6] items-center justify-between md:justify-center gap-6 px-6 fixed top-0 z-50 border-b border-orange-100 shadow-sm">
 
       {/* Heading */}
-      {userData.role==="user" || userData.role ==="deliveryBoy" ? <div className="flex items-center">
-          <h1 className="font-super-woobly flex text-3xl font-bold bg-linear-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+      {userData.role==="user" || userData.role ==="deliveryBoy" ? <div className="flex items-center" onClick={()=>navigate("/")}>
+          <h1 className="font-super-woobly flex text-3xl font-bold bg-linear-to-r
+           from-orange-500 to-red-500 bg-clip-text text-transparent cursor-pointer">
             Munch
           </h1>
-        </div> : <> <div className="md:hidden flex items-center">
-          <h1 className="font-super-woobly flex text-3xl font-bold bg-linear-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+        </div> : <> <div className="md:hidden flex items-center" onClick={()=>navigate("/")}>
+          <h1 className="font-super-woobly flex text-3xl font-bold bg-linear-to-r
+           from-orange-500 to-red-500 bg-clip-text text-transparent cursor-pointer">
              Munch
           </h1>
         </div>
@@ -107,7 +137,10 @@ function Navbar() {
                   placeholder="Search Category, Foods, Stores..."
                   className="px-2.5 text-gray-700 truncate outline-0 w-full bg-transparent 
                     placeholder-gray-400 text-sm focus:placeholder-orange-300 
-                    transition-colors"/>
+                    transition-colors"
+                  value={searchQuery}
+                  onChange={(e)=>setSearchQuery(e.target.value)}
+                    />
               </div>
             </div>
     )}
@@ -118,7 +151,7 @@ function Navbar() {
     hover:shadow-xl transition-all duration-300">
 
             {/* Location */}
-            <div className="md:flex hidden items-center w-[30%] min-w-0 gap-3 px-3 border-r-2 border-orange-200">
+            <div className="md:flex hidden items-center w-[30%] min-w-0 gap-3 px-3 border-r-2 border-orange-200 ">
               <CitySelector />
             </div>
    
@@ -129,7 +162,10 @@ function Navbar() {
                 type="text"
                 placeholder="Search Category, Foods, Stores..."
                 className="px-2.5 text-gray-700 outline-0 w-full bg-transparent 
-                  placeholder-gray-400 text-sm focus:placeholder-orange-300 transition-colors"/>
+                  placeholder-gray-400 text-sm focus:placeholder-orange-300 transition-colors"
+                value={searchQuery}
+                onChange={(e)=>setSearchQuery(e.target.value)}
+                  />
               </div>
             </div>
              }

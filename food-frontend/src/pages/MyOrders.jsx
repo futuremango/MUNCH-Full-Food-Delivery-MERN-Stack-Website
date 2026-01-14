@@ -37,17 +37,23 @@ function MyOrders() {
         fetchOrders();
     }, [fetchOrders]);
 
-    // ✅ Auto-refresh for BOTH users and owners
-    useEffect(() => {
-        // Auto-refresh every 10 seconds for both roles
-        const intervalId = setInterval(() => {
-            console.log("Auto-refreshing orders...");
-            fetchOrders();
-        }, 10000); // 10 seconds
-        
-        // Cleanup
-        return () => clearInterval(intervalId);
-    }, [fetchOrders]);
+useEffect(() => {
+  const intervalId = setInterval(() => {
+    console.log("Auto-refreshing orders...");
+    fetchOrders();
+    
+    if (myOrders.some(order => 
+      order.shopOrders?.some(so => 
+        so.status === "out for delivery" || so.status === "delivered"
+      )
+    )) {
+      console.log("Refreshing delivery status...");
+      fetchOrders(); 
+    }
+  }, 10000); 
+  
+  return () => clearInterval(intervalId);
+}, [fetchOrders, myOrders]);
 
     // Format last updated time
     const formatTime = (date) => {

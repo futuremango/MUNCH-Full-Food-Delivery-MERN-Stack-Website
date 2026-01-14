@@ -95,6 +95,11 @@ export const getShopCity = async (req, res) => {
       ]
     }).populate('items').populate('owner', 'name email');
     
+    if(!shops || shops.length === 0) {
+      console.log(`❌ No shops found for city: "${city}"`);
+      return res.status(200).json([]);
+    }
+    
     console.log(` Found ${shops.length} shops for "${city}"`);
     
     return res.status(200).json(shops);

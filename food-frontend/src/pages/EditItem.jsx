@@ -28,10 +28,10 @@ function EditItem() {
   const categories = [
     "Snacks", "Main Course", "Dessert", "Pizza", "Burger", 
     "Sandwiches", "Pasta", "Desi Food", "Fast Food", "Homemade", 
-    "Chinese", "Bakery", "Indian Food", "Others"
+    "Chinese", "Bakery", "Indian Food", "All"
   ];
 
-  const foodTypes = ["Veg", "Non-veg", "Drink", "Sweet", "Snack", "Other"];
+  const foodTypes = ["Veg", "Non-veg", "Drink", "Sweet", "Other"];
 
   useEffect(() => {
     const fetchItem = async () => {

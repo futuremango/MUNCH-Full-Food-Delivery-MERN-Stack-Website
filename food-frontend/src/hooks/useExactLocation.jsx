@@ -27,17 +27,14 @@ function useExactLocation() {
 
           console.log("GPS Coordinates:", { latitude, longitude });
 
-          // Update location in Redux
           dispatch(setLocation({ lat: latitude, lng: longitude }));
 
-          // Get address from coordinates - FIXED: Add &format=json
           const result = await axios.get(
             `https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&apiKey=${apiKey}&format=json`
           );
 
           console.log("Geoapify Reverse Response:", result.data);
 
-          // FIXED: Check for 'results' not 'features'
           if (result.data?.results?.length > 0) {
             const formattedAddress = result.data.results[0].formatted;
             console.log("Formatted Address:", formattedAddress);
@@ -77,8 +74,8 @@ function useExactLocation() {
       },
       {
         enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0
+        timeout: 20000,
+        maximumAge: 300000
       }
     );
   };

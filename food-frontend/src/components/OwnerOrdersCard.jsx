@@ -69,9 +69,11 @@ function OwnerOrdersCard({ data, onStatusUpdate, onOrderUpdate}) {
 
     const calculateTotal = () => {
         if (!shopOrder?.shopOrderItems) return 0;
-        return shopOrder.shopOrderItems.reduce((sum, item) => 
+        const itemsTotal = shopOrder.shopOrderItems.reduce((sum, item) => 
             sum + (item.price * item.quantity), 0
         );
+        const deliveryFee = itemsTotal > 500 ? 0 : 50;
+        return itemsTotal + deliveryFee;
     };
     const totalAmount = calculateTotal();
 
@@ -136,6 +138,40 @@ function OwnerOrdersCard({ data, onStatusUpdate, onOrderUpdate}) {
         }
     };
 
+    // Auto-refresh order status when in "out for delivery" or "delivered" state
+useEffect(() => {
+  if (currentStatus === "out for delivery" || currentStatus === "delivered") {
+    const interval = setInterval(async () => {
+      try {
+        const result = await axios.get(`${serverUrl}/api/order/get-orders`, 
+          { withCredentials: true });
+        
+        // Find updated order
+        const updatedOrder = result.data.find(order => order._id === _id);
+        if (updatedOrder) {
+          const updatedShopOrder = updatedOrder.shopOrders?.[0];
+          if (updatedShopOrder && updatedShopOrder.status !== currentStatus) {
+            setCurrentStatus(updatedShopOrder.status);
+            
+            if (updatedShopOrder.status === "delivered") {
+              setAcceptedDeliveryBoy(updatedShopOrder.assignedDeliveryBoy);
+            }
+            
+            // Notify parent component
+            if (onStatusUpdate) {
+              onStatusUpdate(updatedOrder);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error refreshing order status:", error);
+      }
+    }, 10000); // Check every 10 seconds
+
+    return () => clearInterval(interval);
+  }
+}, [currentStatus, _id, onStatusUpdate]);
+
     return (
         <div className='bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow transition-all duration-200 p-4'>
             {/* Header - Order ID, Time, Status */}
@@ -155,6 +191,13 @@ function OwnerOrdersCard({ data, onStatusUpdate, onOrderUpdate}) {
                 </div>
                 
                 <div className="flex items-center gap-2">
+                <span className={`text-xs px-2.5 py-1 rounded-full ${
+                        data.paymentMethod === "online" 
+                            ? "bg-green-50 text-green-700 border border-green-200" 
+                            : "bg-yellow-50 text-yellow-700 border border-yellow-200"
+                    } font-medium`}>
+                        {data.paymentMethod === "online" ? "Paid" : "Pay on Delivery"}
+                    </span>
                     <span className={`text-xs px-2.5 py-1 rounded-full ${status.color} font-medium`}>
                         {status.text}
                     </span>
@@ -344,6 +387,7 @@ function OwnerOrdersCard({ data, onStatusUpdate, onOrderUpdate}) {
                                 </div>
                             </div>
                             <div className="text-right">
+                             
                                 <p className="font-medium text-gray-800">Rs.{item.price * item.quantity}</p>
                                 <p className="text-xs text-gray-500">Rs.{item.price} each</p>
                             </div>
@@ -358,6 +402,7 @@ function OwnerOrdersCard({ data, onStatusUpdate, onOrderUpdate}) {
                     <p className="text-xs text-gray-500 mb-1">Total Amount</p>
                     <p className="text-xl font-bold text-gray-900">Rs.{totalAmount}</p>
                 </div>
+               
                 
                 <div className="flex gap-2">
                     {currentStatus === "delivered" || currentStatus === "cancelled" ? (

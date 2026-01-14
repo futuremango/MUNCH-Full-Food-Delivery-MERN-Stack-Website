@@ -3,7 +3,7 @@ import { FaStar, FaRegStar, FaShoppingCart, FaPlus, FaMinus } from "react-icons/
 import { addToCart } from "../redux/userSlice";
 import { useDispatch, useSelector } from "react-redux";
 
-function SuggestedItems({ data }) {
+function SuggestedItems({ data, onClick }) {
   const dispatch = useDispatch();
   const { cartItems } = useSelector(state=>state.user)
   const [quantity, setQuantity] = useState(0);
@@ -34,13 +34,16 @@ function SuggestedItems({ data }) {
 
   const foodTypeColors = {
     Veg: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" },
-    NonVeg: { bg: "bg-rose-50", text: "text-rose-700", border: "border-rose-200" }
+    "Non-veg": { bg: "bg-rose-50", text: "text-rose-700", border: "border-rose-200" },
+    Drink: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" },
+    Sweet: { bg: "bg-pink-50", text: "text-pink-700", border: "border-pink-200" },
+    Other: { bg: "bg-gray-50", text: "text-gray-700", border: "border-gray-200" },
   };
 
-  const typeConfig = data.foodType === "Veg" ? foodTypeColors.Veg : foodTypeColors.NonVeg;
+  const typeConfig = foodTypeColors[data.foodType] || foodTypeColors.Other;
 
   return (
-    <div className="relative group w-full">
+    <div className="relative group w-full" onClick={onClick}>
       <div className="absolute inset-0 bg-linear-to-br from-orange-50/0 to-orange-100/0 group-hover:to-orange-100/30 rounded-2xl transition-all duration-300"></div>
       
       <div className="relative bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 group-hover:border-orange-200 flex flex-col h-full">

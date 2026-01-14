@@ -156,7 +156,7 @@ function TrackOrderPage() {
                                     <div className="flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-green-50 to-green-100/30 rounded-lg">
                                         <FaCheckCircle className="text-green-600" size={24} />
                                         <div>
-                                            <p className="font-bold text-green-700">Order Delivered!</p>
+                                            <p className="font-bold text-green-700">Order was Delivered!</p>
                                             <p className="text-sm text-green-600">Your order has been successfully delivered</p>
                                         </div>
                                     </div>

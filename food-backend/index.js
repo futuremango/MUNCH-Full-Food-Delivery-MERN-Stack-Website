@@ -10,12 +10,25 @@ import shopRouter from './routes/shopRoutes.js';
 import itemRouter from './routes/itemRoutes.js';
 import cors from "cors"
 import orderRouter from './routes/orderRoutes.js';
+import http from 'http';
+import { Server } from 'socket.io';
+import { socketHandler } from './socket.js';
 
 
 //NOTE - Express app initialization
 const app = express();
-const port=process.env.PORT || 5000;
+const server = http.createServer(app);
 
+const io = new Server(server, {
+    cors:{
+    origin:"http://localhost:5173",
+    credentials:true,
+    methods:["GET","POST","PUT"]
+}
+})
+app.set("io" , io);
+
+const port=process.env.PORT || 5000;
 //NOTE - Initialization of CORS
 app.use(cors({
     origin:"http://localhost:5173",
@@ -33,8 +46,10 @@ app.use("/api/shop" , shopRouter)
 app.use("/api/item" , itemRouter)
 app.use("/api/order", orderRouter)
 
+socketHandler(io);
+
 //NOTE - Server start with port, here callback function is used.
-app.listen(port,()=>{
+server.listen(port,()=>{
     connectDB()
     console.log(`Server started at ${port}`);
 });

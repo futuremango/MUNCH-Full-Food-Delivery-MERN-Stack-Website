@@ -17,24 +17,19 @@ function CitySelector() {
 
   const handleUseCurrentLocation = () => {
     setIsDetecting(true);
-    
-    // when it doesnt refresh, by force, remove item, then get newly refresh loc
     localStorage.removeItem('userCity');
     localStorage.removeItem('selectedCity');
-    
     // Trigger GPS detection, (navigator+Geolocation COmbo)
     navigator.geolocation.getCurrentPosition(() => {
         console.log("GPS permission granted, location will update automatically");
         setIsDetecting(false);
         setShowSelector(false);
-        window.location.reload(); // Refresh to trigger useGetCity
       },
       (error) => {
         console.error("GPS failed:", error);
-        alert("Please enable location services or select a city manually");
         setIsDetecting(false);
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      {  enableHighAccuracy: true, timeout: 20000, maximumAge: 300000 }
     );
   };
   

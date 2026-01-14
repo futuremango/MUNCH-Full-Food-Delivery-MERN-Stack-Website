@@ -6,15 +6,15 @@ import axios from "axios";
 function useGetCity() {
   const dispatch = useDispatch();
   const hasFetched = useRef(false);
-  
+  const apiKey = import.meta.env.VITE_GEO_APIKEY; 
   const getCityFromArea = (areaName) => {
     if (!areaName) return "Unknown";
-    
+
     areaName = areaName.trim().toLowerCase();
-    
+
     const areaToCityMap = {
       'shah wali colony': 'Wah Cantt',
-      'wah':'Wah Cantt',
+      'wah': 'Wah Cantt',
       'gulshan colony': 'Wah Cantt',
       'lalazar': 'Wah Cantt',
       'civil lines': 'Wah Cantt',
@@ -26,28 +26,28 @@ function useGetCity() {
       'bahria town': 'Rawalpindi',
       // Add more mappings as needed
     };
-    
+
     for (const [area, city] of Object.entries(areaToCityMap)) {
       if (areaName.includes(area.toLowerCase())) {
         return city;
       }
     }
-    
+
     const majorCities = ['islamabad', 'rawalpindi', 'lahore', 'karachi', 'peshawar'];
     for (const city of majorCities) {
       if (areaName.includes(city)) {
         return city.charAt(0).toUpperCase() + city.slice(1);
       }
     }
-    
-    return areaName.split(',')[0].trim(); 
+
+    return areaName.split(',')[0].trim();
   };
 
   useEffect(() => {
     if (hasFetched.current) return;
-    
+
     hasFetched.current = true;
-    
+
     const cachedLocation = localStorage.getItem('userCity');
     if (cachedLocation) {
       try {
@@ -58,53 +58,59 @@ function useGetCity() {
           return;
         }
       } catch (e) {
-        console.log(e,"Cache invalid, fetching fresh location");
+        console.log(e, "Cache invalid, fetching fresh location");
       }
     }
-    
+
     navigator.geolocation.getCurrentPosition(async (pos) => {
       const latitude = pos.coords.latitude;
       const longitude = pos.coords.longitude;
       console.log("📍 Fetching location for:", latitude, longitude);
       try {
         const result = await axios.get(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1&zoom=16`,
+          `https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&apiKey=${apiKey}&format=json`
         );
-        
-        const address = result.data.address;
-        
-        let city = address.city || 
-                  address.town || 
-                  address.village || 
-                  address.county || 
-                  address.state_district || 
-                  "Unknown";
-        
-        city = getCityFromArea(city);
-        
-        console.log("📍 Normalized city:", city);
-        
-        dispatch(setGetCity(city));
-        dispatch(setGetState(address.state || ""));
-        dispatch(setGetAddress(result.data.display_name || ""));
-        
-        localStorage.setItem('userCity', JSON.stringify({
-          city: city,
-          timestamp: Date.now(),
-          coords: { lat: latitude, lng: longitude }
-        }));
-        
+
+        console.log("Geoapify response:", result.data);
+
+        if (result.data?.results?.length > 0) {
+          const address = result.data.results[0];
+
+          let city = address.city ||
+            address.town ||
+            address.village ||
+            address.county ||
+            address.state_district ||
+            "Unknown";
+
+          city = getCityFromArea(city);
+
+          console.log("📍 Normalized city:", city);
+
+          dispatch(setGetCity(city));
+          dispatch(setGetState(address.state || ""));
+          dispatch(setGetAddress(address.formatted || ""));
+
+          localStorage.setItem('userCity', JSON.stringify({
+            city: city,
+            timestamp: Date.now(),
+            coords: { lat: latitude, lng: longitude }
+          }));
+        } else {
+          console.log("No address found from Geoapify");
+          throw new Error("No address found");
+        }
+
       } catch (error) {
-        console.error("Error fetching location:", error);
-        
+        console.error("Geoapify error:", error);
         try {
-          const ipResult = await axios.get('https://ipapi.co/json/');
+          const ipResult = await axios.get('https://api.ipify.org?format=json');
           let city = ipResult.data.city || "Unknown";
           city = getCityFromArea(city);
-          
+
           dispatch(setGetCity(city));
           dispatch(setGetState(ipResult.data.region || ""));
-          
+
           localStorage.setItem('userCity', JSON.stringify({
             city: city,
             timestamp: Date.now(),
@@ -112,24 +118,24 @@ function useGetCity() {
           }));
         } catch (ipError) {
           console.error("IP location failed:", ipError);
-          
-          
+
+
           dispatch(setGetCity("Wah Cantt"));
         }
       }
-    }, 
-    (error) => {
-      console.error("Geolocation blocked or failed:", error);
-      
-      const defaultCity = localStorage.getItem('selectedCity') || "Wah Cantt";
-      dispatch(setGetCity(defaultCity));
     },
-    {
-      enableHighAccuracy: false, 
-      timeout: 8000,
-      maximumAge: 30 * 60 * 1000 
-    });
-    
+      (error) => {
+        console.error("Geolocation blocked or failed:", error);
+
+        const defaultCity = localStorage.getItem('selectedCity') || "Wah Cantt";
+        dispatch(setGetCity(defaultCity));
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 8000,
+        maximumAge: 30 * 60 * 1000
+      });
+
   }, [dispatch]);
 }
 

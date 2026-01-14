@@ -14,6 +14,7 @@ import image13 from './assets/image13.avif'
 import image14 from './assets/image14.jpeg'
 
 export const categories = [
+    {"category": "All", "image": image11},
     {"category": "Snacks", "image": image1},
     {"category": "Main Course", "image": image2},
     {"category": "Desserts", "image": image3},
@@ -27,5 +28,4 @@ export const categories = [
     {"category": "Bakery", "image": image12},
     {"category": "Homemade", "image": image13},
     {"category": "Indian Food", "image": image14},
-    {"category": "Other", "image": image11},
 ];

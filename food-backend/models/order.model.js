@@ -40,6 +40,18 @@ const shopOrderSchema = new mongoose.Schema({
     },
     assignedDeliveryBoyAt: {  
         type: Date
+    },
+    deliveryOtp:{
+        type:String,
+        default:null,
+    },
+    OtpExpires:{
+        type:Date,
+        default:null,
+    },
+    deliveredAt:{
+        type:Date,
+        default:null
     }
 }, {timestamps:true});
 

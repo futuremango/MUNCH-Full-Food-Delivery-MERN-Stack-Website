@@ -2,6 +2,7 @@ import DeliveryAssignment from "../models/deliveryAssignment.model.js";
 import Order from "../models/order.model.js"
 import Shop from "../models/shop.model.js"
 import User from "../models/user.model.js";
+import { verifyDeliveryOtpMail } from "../utils/mail.js";
 
 
 export const placeOrder = async (req, res) => {
@@ -377,12 +378,18 @@ export const getCurrentOrder = async (req, res) =>{
             populate:[{ path:"user", select:"fullName mobile location email"}]  
         })
         if(!assignment){
-            return res.status(400).json({message:"Assignment Not Found."})
+            return res.status(200).json({ 
+                success: true,
+                message: "No active delivery found",
+                hasOrder: false 
+            });
         }
         if(!assignment.order){
             return res.status(400).json({message:"No Order for Assignment Found."})
         }
-        const shopOrder = assignment.order.shopOrders.find(so=>toString(so._id)==toString(assignment.shopOrderId))
+        const shopOrder = assignment.order.shopOrders.find(so => 
+        so._id && so._id.toString() === assignment.shopOrderId.toString()
+        )
         if(!shopOrder){
             return res.status(400).json({message:"No ShopOrder for Assignment Found."})
         }
@@ -398,13 +405,16 @@ export const getCurrentOrder = async (req, res) =>{
             customerLocation.lng= assignment.order.deliveryAddress.longitude
         }
         return res.status(200).json({
-            _id:assignment.order._id,
-            user:assignment.order.user,
-            shopOrder,
-            deliveryAddress:assignment.order.deliveryAddress,
-            deliveryBoyLocation,
-            customerLocation
-        })
+        success: true,
+        hasOrder: true,
+        message: "Active delivery found",
+        _id: assignment.order._id,
+        user: assignment.order.user,
+        shopOrder,
+        deliveryAddress: assignment.order.deliveryAddress,
+        deliveryBoyLocation,
+        customerLocation
+    })
     } catch (error) {
         return res.status(500).json({message:"get Current Order Not Found."})
     }
@@ -437,4 +447,100 @@ export const getOrderById = async (req, res) => {
     }
 };
 
+export const sendeliveryOTP = async(req, res) =>{
+    try{
+        const { orderId, shopOrderId } = req.body 
+        console.log("Sending OTP for:", { orderId, shopOrderId });
+        const order = await Order.findById(orderId).populate("user")
+         if (!order) {
+            return res.status(400).json({message: "Order not found"});
+        }
+        const shopOrder = order.shopOrders.id(shopOrderId)
+        if(!order || !shopOrder){
+            return res.status(400).json({message:"Invalid Shop Order Id"})
+        }
+        const otp = Math.floor(1000 + Math.random() * 9000).toString()
+        shopOrder.deliveryOtp=otp
+        shopOrder.OtpExpires =  Date.now() + 1 * 60 * 1000
+        await order.save()
+                try {
+            await verifyDeliveryOtpMail(order.user, otp);
+            console.log("Delivery OTP email sent successfully");
+        } catch (emailError) {
+            console.warn("Failed to send email, but OTP was saved:", emailError.message);
+            // Continue anyway, the OTP is saved in the database
+        }
 
+        console.log("OTP generated:", otp);
+        return res.status(200).json({message:`OTP Sent Successfully to ${order.user.fullName}`, otp:otp})
+    }catch(error){
+        return res.status(500).json({message:`Error OTP Send Delivery ${error.message}`})
+    }
+};
+
+export const verifyOTPDelivery = async (req, res) => {
+    try {
+        const {orderId, shopOrderId, otp}=req.body
+        console.log("Verifying OTP:", { orderId, shopOrderId, otp });
+        
+        const order = await Order.findById(orderId)
+            .populate("user")
+            .populate("shopOrders.shop")
+            .populate("shopOrders.owner");
+            
+        if (!order) {
+            return res.status(400).json({message: "Order not found"});
+        }
+        
+        const shopOrder = order.shopOrders.id(shopOrderId)
+        if(!shopOrder){
+            return res.status(400).json({message:"Invalid Shop Order Id"})
+        }
+        
+        // Check OTP validity
+        if(shopOrder.deliveryOtp!==otp || !shopOrder.OtpExpires || shopOrder.OtpExpires<Date.now()){
+            return res.status(400).json({message:'Invalid or Expired OTP!'})
+        }
+        
+        // Update shop order status
+        shopOrder.status="delivered"
+        shopOrder.deliveredAt=Date.now()
+        
+        // Clear OTP fields
+        shopOrder.deliveryOtp = null;
+        shopOrder.OtpExpires = null;
+        
+        // Save the order
+        await order.save();
+        
+        // Update delivery assignment
+        await DeliveryAssignment.findOneAndUpdate(
+            {
+                shopOrderId: shopOrder._id,
+                order: order._id,
+                assignedTo: shopOrder.assignedDeliveryBoy
+            },
+            {
+                status: "completed",
+                completedAt: Date.now()
+            }
+        );
+        
+        // Get the populated order for response
+        const populatedOrder = await Order.findById(orderId)
+            .populate("user", "fullName email mobile")
+            .populate("shopOrders.shop", "name")
+            .populate("shopOrders.owner", "name email mobile")
+            .populate("shopOrders.shopOrderItems.item", "name image price")
+            .populate("shopOrders.assignedDeliveryBoy", "fullName email mobile");
+        
+        return res.status(200).json({
+            message: `Order Delivered Successfully`,
+            order: populatedOrder,
+            updated: true
+        });
+        
+    } catch (error) {
+        return res.status(500).json({message: `Error Verifying Delivery OTP ${error.message}`})
+    }
+};

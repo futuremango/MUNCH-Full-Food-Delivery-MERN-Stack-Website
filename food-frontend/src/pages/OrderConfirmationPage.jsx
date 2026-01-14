@@ -169,7 +169,10 @@ function OrderConfirmationPage() {
             Order Confirmed
           </h1>
           <p className="text-gray-600">
-            ID: <span className="font-mono font-semibold text-gray-800">{shortOrderId}</span>
+          ID: <span className="font-mono font-semibold text-gray-800">{shortOrderId}</span>
+            <span className="ml-2 text-sm px-2 py-1 bg-gray-100 rounded">
+                {orderData.paymentMethod === "online" ? "Paid Online" : "Cash on Delivery"}
+           </span>
           </p>
         </motion.div>
 

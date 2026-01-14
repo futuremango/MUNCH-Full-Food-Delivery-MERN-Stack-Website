@@ -66,6 +66,7 @@ function PaymentMethodPage() {
   const [selectedPayment, setSelectedPayment] = useState("cod");
   const [state, setState] = useState("");
   const [zipCode, setZipCode] = useState("");
+  
 
   // Calculate delivery fee and totals
   const deliveryFee = totalAmountInCart > 500 ? 0 : 50;
@@ -120,6 +121,7 @@ function PaymentMethodPage() {
 
   const getAddressBylatlng = async (lat, lng) => {
     try {
+      setSearchLoading(true);
       const result = await axios.get(
         `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lng}&apiKey=${apiKey}&format=json`
       );
@@ -133,9 +135,15 @@ function PaymentMethodPage() {
 
         if (addressData.state) setState(addressData.state);
         if (addressData.postcode) setZipCode(addressData.postcode);
+        return true
       }
+      return false
     } catch (error) {
       console.error("Error fetching address:", error);
+      setSearchError("Could not fetch address for this location");
+      return false;
+    }finally{
+      setSearchLoading(false);
     }
   };
 
@@ -205,11 +213,18 @@ function PaymentMethodPage() {
     };
   }, [showDropdown]);
 
-  const handleGpsClick = () => {
-    setShowDropdown(false);
-    setSearchError(null);
-    getLocationDetails();
-  };
+
+ const handleGpsClick = () => {
+  setShowDropdown(false);
+  setSearchError(null);
+  if (addressInput.trim() && !window.confirm("This will replace your current address with your GPS location. Continue?")) {
+    return;
+  }
+  setAddressInput("");
+  dispatch(setAddress(""));
+  getLocationDetails();
+};
+
 
   // Sync addressInput when Redux address updates
   React.useEffect(() => {
@@ -219,6 +234,25 @@ function PaymentMethodPage() {
   }, [address, addressInput]);
 
   const handlePlaceOrder = async () => {
+    if(!addressInput.trim()){
+      alert("Please enter or choose your delivery address");
+      return;
+    }
+    if(cartItems.length === 0){
+      alert("Your cart is empty. Please add items to place an order.");
+      return;
+    }
+    if(selectedPayment === "online"){
+      const confirmed = window.confirm(
+            `💳 SIMULATED PAYMENT DEMO\n\n` +
+            `Total: Rs.${totalOverallAmount}\n\n` +
+            `This is a simulated payment for portfolio demonstration.\n` +
+            `Click OK to continue with order.`
+        );
+        if(!confirmed){
+          return;
+        }
+    }
     try {
       const result = await axios.post(`${serverUrl}/api/order/place-order`,{
         paymentMethod:selectedPayment,
@@ -227,8 +261,8 @@ function PaymentMethodPage() {
           latitude:location.lat,
           longitude:location.lng
         },
-        totalAmount:totalAmountInCart,
-        cartItems
+        totalAmount:totalOverallAmount,
+        cartItems,
       },{withCredentials:true})
       dispatch(updateMyOrder(result.data))
       localStorage.setItem("lastOrder", JSON.stringify(result.data));
@@ -237,8 +271,9 @@ function PaymentMethodPage() {
       });
     } catch (error) {
       console.log(error)
+      alert("Order failed. Please try again.");
     }
-  }
+};
 
   const OrderSummary = () => (
     <div className="border-t border-gray-200 pt-8">
@@ -543,7 +578,7 @@ function PaymentMethodPage() {
                   </button>
                   <button
                     onClick={handleGpsClick}
-                    disabled={isLoading}
+                    disabled={isLoading || searchLoading || isDragging}
                     className="flex-1 border border-orange-200 bg-orange-100 hover:border-orange-400 text-gray-900 px-4 py-3.5 rounded-xl 
                       text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2
                       disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
@@ -578,7 +613,7 @@ function PaymentMethodPage() {
                   font-medium transition-all duration-300 flex items-center justify-center gap-2
                   disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] shadow-md hover:shadow-lg"
               >
-                {selectedPayment==="cod"?"Confirm Place Order":"Confirm Pay & Place Order"}
+                {selectedPayment==="cod"?"Confirm Order":"Confirm Pay & Place Order"}
                 <FaChevronRight size={18} />
               </button>
             </div>
@@ -772,8 +807,8 @@ function PaymentMethodPage() {
                         <MdCreditCard className="text-blue-600" size={20} />
                       </div>
                       <div>
-                        <p className="font-medium text-gray-800">Card Payment</p>
-                        <p className="text-xs text-gray-500">Credit/Debit card</p>
+                        <p className="font-medium text-gray-800">Online Payment</p>
+                        <p className="text-xs text-gray-500">Credit/Debit card (DEMO)</p>
                       </div>
                     </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center

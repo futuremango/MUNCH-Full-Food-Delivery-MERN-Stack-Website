@@ -36,15 +36,19 @@ function UserOrdersCard({ data, onOrderUpdate }) {
     const overallStatusInfo = statusConfig[overallStatus] || statusConfig.pending;
 
     // Calculate delivery fee and totals
-    const calculateTotals = () => {
-        const deliveryFee = totalAmount > 500 ? 0 : 50;
-        const grandTotal = totalAmount + deliveryFee;
-        return {
-            subtotal: totalAmount, 
-            deliveryFee,
-            grandTotal
-        };
+   const calculateTotals = () => {
+    const itemsSubtotal = shopOrders?.reduce((shopSum, shopOrder) => {
+        return shopSum + (shopOrder.shopOrderItems?.reduce((itemSum, item) => 
+            itemSum + (item.price * item.quantity), 0) || 0);
+    }, 0) || 0;
+    const deliveryFee = itemsSubtotal > 500 ? 0 : 50;
+    const grandTotal = totalAmount;
+    return {
+        subtotal: itemsSubtotal, 
+        deliveryFee,
+        grandTotal
     };
+};
     const total = calculateTotals();
 
     React.useEffect(() => {
@@ -69,6 +73,7 @@ function UserOrdersCard({ data, onOrderUpdate }) {
                     <span className="text-sm text-gray-500 hidden sm:block">{orderDate}</span>
                 </div>
                 
+                
                 <div className='flex items-center justify-between sm:justify-normal gap-4'>
                     <span className="text-sm text-gray-500 sm:hidden">{orderDate}</span>
                     <span className={`text-xs px-2.5 py-1 rounded-full ${overallStatusInfo.color} font-medium`}>
@@ -76,6 +81,14 @@ function UserOrdersCard({ data, onOrderUpdate }) {
                     </span>
                     <span className="text-sm font-medium text-gray-700 px-2 py-1 bg-gray-50 rounded">
                         {paymentMethod?.toUpperCase()}
+                    </span>
+                    {/* Optional: Add payment status if you want */}
+                    <span className={`text-xs px-2.5 py-1 rounded-full ${
+                        paymentMethod === "online" 
+                            ? "bg-green-50 text-green-700 border border-green-200" 
+                            : "bg-yellow-50 text-yellow-700 border border-yellow-200"
+                    } font-medium`}>
+                        {paymentMethod === "online" ? "Paid" : "Pay on Delivery"}
                     </span>
                 </div>
             </div>
@@ -94,7 +107,7 @@ function UserOrdersCard({ data, onOrderUpdate }) {
                         <div className='flex items-center justify-between mb-3'>
                             <div className='flex items-center gap-2'>
                                 <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                                <p className="font-medium text-gray-800">{shopOrder.shop.name}</p>
+                                <p className="font-medium text-gray-800">{shopOrder.shop?.name}</p>
                             </div>
                             <span className={`text-xs px-2.5 py-1 rounded-full ${shopStatusInfo.color} font-medium`}>
                                 {shopStatusInfo.text}
@@ -107,8 +120,8 @@ function UserOrdersCard({ data, onOrderUpdate }) {
                                 <div key={idx} className='border border-gray-100 rounded-lg p-2 bg-gray-50 hover:bg-white transition-colors'>
                                     <div className="aspect-square mb-2 overflow-hidden rounded">
                                         <img 
-                                            src={item.item.image} 
-                                            alt={item.name}
+                                            src={item.item?.image || ''} 
+                                            alt={item.name || 'Item'}
                                             className='w-full h-full object-cover hover:scale-105 transition-transform duration-200'
                                         />
                                     </div>
@@ -136,7 +149,7 @@ function UserOrdersCard({ data, onOrderUpdate }) {
                 <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
                     <div className='space-y-1'>
                         <p className='text-sm text-gray-500'>Total Amount</p>
-                        <p className='text-xl font-semibold text-gray-900'>Rs.{total.grandTotal.toFixed(2)}</p>
+                        <p className='text-xl font-semibold text-gray-900'>Rs.{total.grandTotal}</p>
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                             <span>Delivery: {total.deliveryFee === 0 ? 'FREE' : `Rs.${total.deliveryFee}`}</span>
                         </div>

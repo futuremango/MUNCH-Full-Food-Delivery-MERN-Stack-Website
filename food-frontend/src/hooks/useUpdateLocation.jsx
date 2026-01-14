@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useSelector, useDispatch } from 'react-redux';
 import axios from "axios";
 import { serverUrl } from "../App";
@@ -7,9 +7,9 @@ import { updateUserLocation } from '../redux/userSlice';
 function useUpdateLocation() {
     const dispatch = useDispatch(); 
     const { userData } = useSelector((state) => state.user);
-
+    const watchIdRef = useRef(null);
     useEffect(() => {
-        if (!userData) return;
+        if (!userData || !userData._id) return;
 
         const updateLocation = async (lat, lng) => {
             if (lat === 0 && lng === 0) {
@@ -41,15 +41,31 @@ function useUpdateLocation() {
           
                 if (lat !== 0 && lng !== 0) {
                     updateLocation(lat, lng);
-                    
-                  
-                    navigator.geolocation.watchPosition(
-                        (pos) => updateLocation(pos.coords.latitude, pos.coords.longitude)
+                  if (watchIdRef.current) {
+                    navigator.geolocation.clearWatch(watchIdRef.current);
+                }
+                   watchIdRef.current = navigator.geolocation.watchPosition(
+                        (pos) => updateLocation(pos.coords.latitude, pos.coords.longitude),
+                        (error) => console.log("Watch position error:", error.message),
+                        { 
+                        enableHighAccuracy: false, 
+                        maximumAge: 30000, 
+                        timeout: 10000 
+                        }
                     );
                 }
             },
-            (error) => console.log("Initial location error:", error.message)
+            (error) => console.log("Initial location error:", error.message),
+            { 
+                enableHighAccuracy: false,
+                timeout: 10000 
+            }
         );
+        return () => {
+            if (watchIdRef.current) {
+                navigator.geolocation.clearWatch(watchIdRef.current);
+            }
+        };
     }, [userData, dispatch]); 
 }
 
