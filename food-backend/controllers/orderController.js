@@ -66,6 +66,31 @@ export const placeOrder = async (req, res) => {
             shopOrders,
         })
         await newOrder.populate("shopOrders.shopOrderItems.item","name image price")
+        await newOrder.populate("shopOrders.shop","name")
+        await newOrder.populate("shopOrders.owner","name socketId")
+        await newOrder.populate("user","name email mobile")
+
+        const io = req.app.get('io');
+        if(io){
+            newOrder.shopOrders.forEach(so=>{
+                const ownerSocketId = so.owner?.socketId
+                if(ownerSocketId){
+                    io.to(ownerSocketId).emit("newOrder", {
+                         _id: newOrder._id,
+                        paymentMethod: newOrder.paymentMethod,
+                        user: newOrder.user,
+                        deliveryAddress: newOrder.deliveryAddress,
+                        totalAmount: newOrder.totalAmount,
+                        shopOrders: so,  
+                        createdAt: newOrder.createdAt,
+                        updatedAt: newOrder.updatedAt
+                    });
+                    console.log(`Order notification sent to owner ${so.owner?.name}`);
+                }else{
+                    console.log(`Owner ${so.owner?.name} is offline, socketId not found.`);
+                }
+            })
+        }
         res.status(201).json(newOrder)
     } catch (error) {
         console.error("Error in placeOrder:", error);
@@ -224,6 +249,27 @@ export const updateOrderStatus = async (req, res) => {
         await shopOrder.save();
         await order.save();
 
+        //notify available delivery boys
+        const io = req.app.get('io');
+        if (status === "out for delivery" && availableBoys.length > 0) {
+            availableBoys.forEach(async (boy) => {
+                const deliveryBoy = await User.findById(boy.id);
+                if (deliveryBoy && deliveryBoy.socketId) {
+                    io.to(deliveryBoy.socketId).emit("newDeliveryAssignment", {
+                        assignmentId: shopOrder.assignment,
+                        orderId: order._id,
+                        shopOrderId: shopOrder._id,
+                        shopName: shopOrder.shop?.name,
+                        deliveryAddress: order.deliveryAddress,
+                        items: shopOrder.shopOrderItems,
+                        totalAmount: shopOrder.subTotal
+                    });
+                    console.log(`Notification sent to delivery boy: ${deliveryBoy.fullName}`);
+                }
+            });
+        }
+
+
         const updatedShopOrder = order.shopOrders.find(o=>o.shop==shopId)
 
          const populatedOrder = await Order.findById(orderId)
@@ -334,6 +380,23 @@ export const acceptAssignment = async (req, res) => {
     shopOrder.assignedDeliveryBoyAt = new Date();
     shopOrder.status = "out for delivery";
     await order.save()
+
+    const io = req.app.get('io');
+    const deliveryBoyUser = await User.findById(deliveryBoyId);
+    const shopOwner = await User.findById(shopOrder.owner);
+        if (shopOwner && shopOwner.socketId) {
+            io.to(shopOwner.socketId).emit("deliveryBoyAccepted", {
+                orderId: order._id,
+                shopOrderId: shopOrder._id,
+                deliveryBoy: {
+                    id: deliveryBoyId,
+                    fullName: deliveryBoyUser.fullName,
+                    mobile: deliveryBoyUser.mobile
+                },
+                acceptedAt: new Date()
+            });
+            console.log(`Delivery acceptance notification sent to owner ${shopOwner.fullName}`);
+        }
    
     const populatedOrder = await Order.findById(order._id)
       .populate("shopOrders.assignedDeliveryBoy", "fullName email mobile")

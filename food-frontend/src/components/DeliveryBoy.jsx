@@ -9,7 +9,7 @@ import { MdRestaurant, MdDeliveryDining } from "react-icons/md";
 import DeliveryBoyTracking from './DeliveryBoyTracking';
 
 function DeliveryBoy() {
-  const { userData } = useSelector((state) => state.user);
+  const { userData, socket } = useSelector((state) => state.user);
   const [availableAssign, setAvailableAssign] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -49,6 +49,55 @@ function DeliveryBoy() {
     const interval = setInterval(getAssignments, 10000);
     return () => clearInterval(interval);
   }, []);
+    
+  useEffect(() => {
+    if (!socket || !userData) return;
+    
+    console.log("Setting up delivery boy socket listeners...");
+    
+    // 1. Listen for new delivery assignments
+    const handleNewAssignment = (data) => {
+        console.log("🎯 NEW delivery assignment received:", data);
+        
+        // Check if this assignment is already in availableAssign
+        const isNewAssignment = !availableAssign.some(a => 
+            a.assignmentId === data.assignmentId || 
+            a.orderId === data.orderId
+        );
+        
+        if (isNewAssignment) {
+            console.log("📦 New assignment found, refreshing...");
+            getAssignments(); // Refresh the list
+        }
+    };
+    
+    // 2. Listen for delivery status updates (optional)
+    const handleStatusUpdate = (data) => {
+        console.log("🔄 Status update:", data);
+        if (currentOrder && data.orderId === currentOrder._id) {
+            getCurrentOrder(); // Refresh current order details
+        }
+    };
+    
+    // 3. Listen for delivery completion (if owner marks delivered without OTP)
+    const handleDeliveryCompleted = (data) => {
+        console.log("✅ Delivery completed:", data);
+        if (currentOrder && data.orderId === currentOrder._id) {
+            setCurrentOrder(null); // Clear current order
+            getAssignments(); // Show available orders
+        }
+    };
+    
+    socket.on('newDeliveryAssignment', handleNewAssignment);
+    socket.on('deliveryStatusUpdate', handleStatusUpdate);
+    socket.on('deliveryBoyAccepted', handleDeliveryCompleted);
+    
+    return () => {
+        socket.off('newDeliveryAssignment', handleNewAssignment);
+        socket.off('deliveryStatusUpdate', handleStatusUpdate);
+        socket.off('deliveryBoyAccepted', handleDeliveryCompleted);
+    };
+}, [socket, userData, currentOrder, availableAssign]);
 
 
   const getCurrentOrder = async () => {
@@ -91,7 +140,6 @@ function DeliveryBoy() {
   };
 
   const handleSendOTP = async()=>{
-   
     try {
       const result = await axios.post(
         `${serverUrl}/api/order/send-delivery-otp`, {orderId:currentOrder._id, shopOrderId:currentOrder.shopOrder._id},

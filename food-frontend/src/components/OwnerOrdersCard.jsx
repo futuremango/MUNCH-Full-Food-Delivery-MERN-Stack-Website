@@ -196,7 +196,7 @@ useEffect(() => {
                             ? "bg-green-50 text-green-700 border border-green-200" 
                             : "bg-yellow-50 text-yellow-700 border border-yellow-200"
                     } font-medium`}>
-                        {data.paymentMethod === "online" ? "Paid" : "Pay on Delivery"}
+                        {data.paymentMethod === "online" ? "Paid" : "Cash on Delivery"}
                     </span>
                     <span className={`text-xs px-2.5 py-1 rounded-full ${status.color} font-medium`}>
                         {status.text}

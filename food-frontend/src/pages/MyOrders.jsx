@@ -12,10 +12,23 @@ import { serverUrl } from '../App';
 function MyOrders() {
     const navigate = useNavigate();
     const dispatch = useDispatch()
-    const { userData, myOrders } = useSelector((state) => state.user)
+    const { userData, myOrders, socket } = useSelector((state) => state.user)
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [lastUpdated, setLastUpdated] = useState(new Date());
 
+    useEffect(()=>{
+        socket?.on('newOrder',(data)=>{
+            console.log("New order received via socket:", data);
+            if(data.shopOrders?.owner._id === userData._id){
+                dispatch(setMyOrders([data, ...myOrders]))
+            }
+        })
+        return()=>{
+            socket?.off('newOrder')
+        }
+    },[socket, dispatch, userData, myOrders])
+
+   
     // Use useCallback to memoize the function
     const fetchOrders = useCallback(async () => {
         try {
@@ -36,6 +49,22 @@ function MyOrders() {
     useEffect(() => {
         fetchOrders();
     }, [fetchOrders]);
+
+     useEffect(() => {
+    if (!socket) return;
+    
+    const handleOrderStatusUpdate = (data) => {
+        console.log("Order status update received:", data);
+        fetchOrders(); 
+    };
+    
+    socket?.on('orderStatusUpdate', handleOrderStatusUpdate);
+    
+    return () => {
+        socket?.off('orderStatusUpdate', handleOrderStatusUpdate);
+    };
+}, [socket, fetchOrders]);
+
 
 useEffect(() => {
   const intervalId = setInterval(() => {

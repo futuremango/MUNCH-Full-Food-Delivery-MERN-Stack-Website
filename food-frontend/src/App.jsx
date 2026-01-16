@@ -38,7 +38,7 @@ function App() {
   useEffect(() => {
   const socketInstance = io(serverUrl, { 
     withCredentials: true,
-    transports: ['websocket', 'polling'] // Add this
+    transports: ['websocket', 'polling'] 
   });
   
   dispatch(setSocket(socketInstance));
