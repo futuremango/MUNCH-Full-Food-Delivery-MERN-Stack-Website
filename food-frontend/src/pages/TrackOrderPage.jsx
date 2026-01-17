@@ -6,9 +6,13 @@ import { FaStore, FaMapMarkerAlt, FaBox, FaMotorcycle, FaCheckCircle } from "rea
 import { MdDeliveryDining } from "react-icons/md";
 import { useNavigate, useParams } from 'react-router-dom'
 import DeliveryBoyTracking from '../components/DeliveryBoyTracking';
+import { useEffect } from 'react';
+import { useSelector } from 'react-redux';
 
 function TrackOrderPage() {
+    const { socket } = useSelector((state)=> state.user)
     const [currentOrder, setCurrentOrder] = useState(null)
+    const [ liveLocation, setLiveLocation] = useState({})     
     const { orderId } = useParams();
     const navigate = useNavigate();
     
@@ -25,6 +29,16 @@ function TrackOrderPage() {
         }
     }
     
+
+    useEffect(()=>{
+        socket?.on('updateDeliveryLocation', ({deliveryBoyId, latitude, longitude})=>{
+            setLiveLocation(prev=>({
+                ...prev,
+                [deliveryBoyId]: { lat:latitude, lng: longitude }
+            }))
+        })
+    },[socket])
+
     React.useEffect(() => {
         handleGetOrder();
     }, [orderId])
@@ -81,7 +95,7 @@ function TrackOrderPage() {
                             </div>
 
                             {/* Order Details Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Items */}
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-2">
@@ -105,7 +119,7 @@ function TrackOrderPage() {
                                 </div>
 
                                 {/* Delivery Address */}
-                                <div className="space-y-2">
+                                <div className="space-y-2 mt-2">
                                     <div className="flex items-center gap-2">
                                         <FaMapMarkerAlt className="text-orange-400" size={14} />
                                         <p className="font-medium text-gray-700">Delivery Address</p>
@@ -134,14 +148,36 @@ function TrackOrderPage() {
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                 <div className="space-y-1">
                                                     <p className="text-xs text-gray-500">Name</p>
-                                                    <p className="font-medium text-gray-800">{shopOrder.assignedDeliveryBoy.fullName}</p>
+                                                    <p className="font-medium text-gray-800">{shopOrder?.assignedDeliveryBoy?.fullName}</p>
                                                 </div>
                                                 <div className="space-y-1">
                                                     <p className="text-xs text-gray-500">Contact</p>
-                                                    <p className="font-medium text-gray-800">{shopOrder.assignedDeliveryBoy.mobile}</p>
+                                                    <p className="font-medium text-gray-800">{shopOrder?.assignedDeliveryBoy?.mobile}</p>
                                                 </div>
                                             </div>
+                                            {/* Tracking Map */}
+                                            {shopOrder?.assignedDeliveryBoy && shopOrder?.assignedDeliveryBoy.location?.coordinates && currentOrder?.deliveryAddress && (
+                                                <div className='mt-4'>
+                                                    <div className="flex items-center gap-2 mb-3">
+                                                        <FaMapMarkerAlt className="text-orange-400" size={16} />
+                                                        <p className="font-medium text-gray-700">Live Tracking</p>
+                                                    </div>
+                                                    <div className='h-[350px] w-full rounded-xl overflow-hidden border border-gray-200'>
+                                                        <DeliveryBoyTracking data={{
+                                                            deliveryBoyLocation: liveLocation[shopOrder?.assignedDeliveryBoy?._id] || { 
+                                                                lat: shopOrder?.assignedDeliveryBoy?.location?.coordinates[1],
+                                                                lng: shopOrder?.assignedDeliveryBoy?.location?.coordinates[0]
+                                                            },
+                                                            customerLocation: {
+                                                                lat: currentOrder?.deliveryAddress?.latitude,
+                                                                lng: currentOrder?.deliveryAddress?.longitude
+                                                            }
+                                                        }} /> 
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
+                                        
                                     ) : (
                                         <div className="text-center py-4">
                                             <div className="p-3 rounded-full bg-gray-100 inline-block mb-2">
@@ -163,27 +199,7 @@ function TrackOrderPage() {
                                 </div>
                             )}
 
-                            {/* Tracking Map */}
-                            {shopOrder.assignedDeliveryBoy && shopOrder.assignedDeliveryBoy.location?.coordinates && currentOrder?.deliveryAddress && (
-                                <div className='mt-4'>
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <FaMapMarkerAlt className="text-orange-400" size={16} />
-                                        <p className="font-medium text-gray-700">Live Tracking</p>
-                                    </div>
-                                    <div className='h-[350px] w-full rounded-xl overflow-hidden border border-gray-200'>
-                                        <DeliveryBoyTracking data={{
-                                            deliveryBoyLocation: { 
-                                                lat: shopOrder.assignedDeliveryBoy.location.coordinates[1],
-                                                lng: shopOrder.assignedDeliveryBoy.location.coordinates[0]
-                                            },
-                                            customerLocation: {
-                                                lat: currentOrder.deliveryAddress.latitude,
-                                                lng: currentOrder.deliveryAddress.longitude
-                                            }
-                                        }} /> 
-                                    </div>
-                                </div>
-                            )}
+                            
                         </div>
                     ))}
                 </div>

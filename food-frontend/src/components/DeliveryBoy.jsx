@@ -16,6 +16,38 @@ function DeliveryBoy() {
   const [currentOrder, setCurrentOrder] = useState(null);
   const [showOTPbox, setShowOTPbox] = useState(null)
   const [otp, setOTP]=useState("")
+  const [deliveryBoyLocation, setDeliveryBoyLocation] = useState(null);
+
+
+  useEffect(()=>{
+    if(!socket || userData.role!=="deliveryBoy") return;
+    let watchId
+    if(navigator.geolocation){
+      watchId = navigator.geolocation?.watchPosition((position)=>{
+        const latitude = position.coords?.latitude
+        const longitude = position.coords?.longitude
+        setDeliveryBoyLocation({ lat: latitude, lng: longitude })
+        socket.emit('updateLocation',{
+          latitude,
+          longitude,
+          userId:userData._id,
+        })
+      }),
+      (error)=>{
+        console.log(error)
+      },
+      {
+        enableHighAccuracy: true,
+      }
+    }
+    return()=>{
+      if(watchId){
+        navigator.geolocation.clearWatch(watchId)
+      }
+    }
+  },[socket, userData])
+
+
 
   const formattedName = userData?.fullName 
     ? userData.fullName.toLowerCase().split(' ').map(word => 
@@ -88,14 +120,14 @@ function DeliveryBoy() {
         }
     };
     
-    socket.on('newDeliveryAssignment', handleNewAssignment);
-    socket.on('deliveryStatusUpdate', handleStatusUpdate);
-    socket.on('deliveryBoyAccepted', handleDeliveryCompleted);
-    
+    socket?.on('newDeliveryAssignment', handleNewAssignment);
+    socket?.on('deliveryStatusUpdate', handleStatusUpdate);
+    socket?.on('deliveryBoyAccepted', handleDeliveryCompleted);
+
     return () => {
-        socket.off('newDeliveryAssignment', handleNewAssignment);
-        socket.off('deliveryStatusUpdate', handleStatusUpdate);
-        socket.off('deliveryBoyAccepted', handleDeliveryCompleted);
+        socket?.off('newDeliveryAssignment', handleNewAssignment);
+        socket?.off('deliveryStatusUpdate', handleStatusUpdate);
+        socket?.off('deliveryBoyAccepted', handleDeliveryCompleted);
     };
 }, [socket, userData, currentOrder, availableAssign]);
 
@@ -183,7 +215,7 @@ function DeliveryBoy() {
   // Calculate total for current order
   const calculateCurrentOrderTotal = () => {
     if (!currentOrder?.shopOrder?.shopOrderItems) return 0;
-    return currentOrder.shopOrder.shopOrderItems.reduce((sum, item) => 
+    return currentOrder?.shopOrder?.shopOrderItems.reduce((sum, item) => 
       sum + (item.price * item.quantity), 0
     );
   };
@@ -260,29 +292,29 @@ function DeliveryBoy() {
                   {currentOrder.user?.mobile && (
                     <div className="flex items-center gap-1 text-xs text-gray-600">
                       <FaPhone size={10} />
-                      <span>{currentOrder.user.mobile}</span>
+                      <span>{currentOrder.user?.mobile}</span>
                     </div>
                   )}
                   {currentOrder.user?.email && (
                     <div className="flex items-center gap-1 text-xs text-gray-600">
                       <FaEnvelope size={10} />
-                      <span className="truncate">{currentOrder.user.email}</span>
+                      <span className="truncate">{currentOrder.user?.email}</span>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Delivery Address */}
-              {currentOrder.deliveryAddress && (
+              {currentOrder?.deliveryAddress && (
                 <div className="flex-1">
                   <div className="flex items-start gap-2">
                     <FaMapMarkerAlt className="text-orange-400 mt-0.5" size={12} />
                     <div className='flex-col'>
                       <p className="font-medium text-gray-900 text-sm mb-1">Delivery To</p>
-                      <p className="text-xs text-gray-700 line-clamp-2">{currentOrder.deliveryAddress.text}</p>
+                      <p className="text-xs text-gray-700 line-clamp-2">{currentOrder?.deliveryAddress?.text}</p>
                       <p className='text-xs text-gray-500 mt-1'>
-                        Lat: {currentOrder.deliveryAddress.latitude?.toFixed(4)} , 
-                        Lon: {currentOrder.deliveryAddress.longitude?.toFixed(4)}
+                        Lat: {currentOrder?.deliveryAddress?.latitude?.toFixed(4)} , 
+                        Lon: {currentOrder?.deliveryAddress?.longitude?.toFixed(4)}
                       </p>
                     </div>
                   </div>
@@ -324,20 +356,20 @@ function DeliveryBoy() {
             {/* Location & Total */}
             <div className="flex flex-col sm:flex-row gap-4 mb-4">
               {/* Location Info */}
-              {(currentOrder.deliveryBoyLocation || currentOrder.customerLocation) && (
+              {(currentOrder?.deliveryBoyLocation || currentOrder?.customerLocation) && (
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <FaMapMarkerAlt className="text-blue-400" size={12} />
                     <p className="font-medium text-gray-900 text-sm">Location Details</p>
                   </div>
                   <div className="text-xs text-gray-600 space-y-1">
-                    {currentOrder.deliveryBoyLocation && (
+                    {currentOrder?.deliveryBoyLocation && (
                       <p>
                         <span className="font-medium">Your Location: </span>
-                        {currentOrder.deliveryBoyLocation.lat?.toFixed(4)}, {currentOrder.deliveryBoyLocation.lng?.toFixed(4)}
+                        {currentOrder?.deliveryBoyLocation.lat?.toFixed(4)}, {currentOrder?.deliveryBoyLocation.lng?.toFixed(4)}
                       </p>
                     )}
-                    {currentOrder.customerLocation && (
+                    {currentOrder?.customerLocation && (
                       <p>
                         <span className="font-medium">Customer Location: </span>
                         {currentOrder.customerLocation.lat?.toFixed(4)}, {currentOrder.customerLocation.lng?.toFixed(4)}
@@ -354,7 +386,16 @@ function DeliveryBoy() {
               </div>
             </div>
 
-             <DeliveryBoyTracking data={currentOrder}/>
+             <DeliveryBoyTracking data={{
+              deliveryBoyLocation: deliveryBoyLocation || { 
+                  lat: userData?.location?.coordinates[1],
+                  lng: userData?.location?.coordinates[0]
+              },
+              customerLocation: {
+                  lat: currentOrder?.deliveryAddress?.latitude,
+                  lng: currentOrder?.deliveryAddress?.longitude
+              }
+          }} /> 
              
             {/* Footer - Actions */}
             <div className="flex items-center justify-between pt-3 border-t border-gray-200">
@@ -368,7 +409,7 @@ function DeliveryBoy() {
                 </button>
               </div> : 
               <div className='mt-4 p-4 border rounded-xl bg-gray-50'>
-                <p className='text-sm font-semibold mb-2'>Enter OTP Send to: <span className='text-orange-500'>{currentOrder.user.fullName.toLowerCase().split(' ').map(word => 
+                <p className='text-sm font-semibold mb-2'>Enter OTP Send to: <span className='text-orange-500'>{currentOrder?.user?.fullName.toLowerCase().split(' ').map(word => 
               word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</span></p>
               <input type='text' 
               value={otp}

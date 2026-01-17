@@ -274,3 +274,98 @@ export const searchItems = async (req, res) => {
     });
   }
 };
+
+export const rating = async (req, res) => {
+  try {
+    const { itemId, rating } = req.body;
+    const userId = req.userId; // Get user ID from auth middleware
+    
+    if (!itemId || !rating) {
+      return res.status(400).json({ message: 'Item ID and rating are required' });
+    }
+    
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({ message: 'Rating must be between 1 and 5' });
+    }
+    
+    const item = await Item.findById(itemId);
+    if (!item) {
+      return res.status(400).json({ message: 'Item not found' });
+    }
+    
+    // Check if user already rated this item
+    const existingRatingIndex = item.rating.usersRated.findIndex(
+      r => r.userId.toString() === userId.toString()
+    );
+    
+    if (existingRatingIndex >= 0) {
+      // User already rated - update existing rating
+      const oldRating = item.rating.usersRated[existingRatingIndex].rating;
+      
+      // Update the user's rating
+      item.rating.usersRated[existingRatingIndex].rating = rating;
+      item.rating.usersRated[existingRatingIndex].ratedAt = Date.now();
+      
+      // Recalculate average
+      const totalRatings = item.rating.usersRated.reduce((sum, r) => sum + r.rating, 0);
+      item.rating.average = totalRatings / item.rating.usersRated.length;
+      item.rating.count = item.rating.usersRated.length; // Should remain same
+      
+    } else {
+      // First time rating - add new rating
+      item.rating.usersRated.push({
+        userId: userId,
+        rating: rating,
+        ratedAt: Date.now()
+      });
+      
+      // Calculate new average
+      const totalRatings = item.rating.usersRated.reduce((sum, r) => sum + r.rating, 0);
+      item.rating.average = totalRatings / item.rating.usersRated.length;
+      item.rating.count = item.rating.usersRated.length;
+    }
+    
+    await item.save();
+    
+    return res.status(200).json({ 
+      message: existingRatingIndex >= 0 ? 'Rating updated successfully' : 'Rating submitted successfully', 
+      item,
+      userRating: rating,
+      canRateAgain: false // User cannot rate again (only update)
+    });
+    
+  } catch (error) {
+    return res.status(500).json({ message: `Error submitting rating: ${error.message}` });
+  }
+};
+
+// Add this to get user's specific rating
+export const getUserRating = async (req, res) => {
+  try {
+    const { itemId } = req.params;
+    const userId = req.userId;
+    
+    const item = await Item.findById(itemId);
+    if (!item) {
+      return res.status(400).json({ message: 'Item not found' });
+    }
+    
+    // Find user's rating
+    const userRating = item.rating.usersRated.find(
+      r => r.userId.toString() === userId.toString()
+    );
+    
+    return res.status(200).json({
+      hasRated: !!userRating,
+      rating: userRating ? userRating.rating : null,
+      canRate: !userRating, // Can only rate if hasn't rated before
+      itemRating: {
+        average: item.rating.average,
+        count: item.rating.count
+      }
+    });
+    
+  } catch (error) {
+    return res.status(500).json({ message: `Error getting user rating: ${error.message}` });
+  }
+};

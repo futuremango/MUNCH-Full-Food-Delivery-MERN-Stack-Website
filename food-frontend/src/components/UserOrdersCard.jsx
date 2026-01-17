@@ -1,10 +1,15 @@
-import React from 'react'
+import axios from 'axios';
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
+import { serverUrl } from '../App';
 
 function UserOrdersCard({ data, onOrderUpdate }) {
     const { _id, createdAt, totalAmount, paymentMethod, deliveryAddress, shopOrders } = data;
     const shortOrderId = _id?.slice(-8).toUpperCase();
     const navigate = useNavigate();
+    const [canRate, setCanRate] = useState({});
+const [userRatings, setUserRatings] = useState({});
+    const [selectedRating , setSelectedRating]=useState({})
     const orderDate = new Date(createdAt).toLocaleDateString('en-GB', {
         day: 'numeric',
         month: 'short',
@@ -50,6 +55,72 @@ function UserOrdersCard({ data, onOrderUpdate }) {
     };
 };
     const total = calculateTotals();
+
+    React.useEffect(() => {
+  const fetchUserRatings = async () => {
+    const ratingsMap = {};
+    const canRateMap = {};
+    
+    // For each item in the order
+    shopOrders?.forEach(shopOrder => {
+      shopOrder.shopOrderItems?.forEach(async (item) => {
+        try {
+          const response = await axios.get(
+            `${serverUrl}/api/item/user-rating/${item.item?._id}`,
+            { withCredentials: true }
+          );
+          
+          ratingsMap[item.item?._id] = response.data.rating;
+          canRateMap[item.item?._id] = response.data.canRate;
+        } catch (error) {
+          console.error("Error fetching rating:", error);
+          canRateMap[item.item?._id] = true; // Assume can rate if error
+        }
+      });
+    });
+    
+    setUserRatings(ratingsMap);
+    setCanRate(canRateMap);
+  };
+  
+  if (shopOrders?.length > 0) {
+    fetchUserRatings();
+  }
+}, [shopOrders]);
+
+// Update handleRating function
+const handleRating = async (itemId, rating) => {
+  if (!canRate[itemId]) {
+    alert("You have already rated this item!");
+    return;
+  }
+  
+  try {
+    const result = await axios.post(
+      `${serverUrl}/api/item/rating`, 
+      { itemId, rating },
+      { withCredentials: true }
+    );
+    
+    // Update state
+    setUserRatings(prev => ({
+      ...prev,
+      [itemId]: rating
+    }));
+    
+    setCanRate(prev => ({
+      ...prev,
+      [itemId]: false // Can't rate again
+    }));
+    
+    console.log(result.data);
+    alert(result.data.message);
+    
+  } catch (error) {
+    console.log(error);
+    alert("Error submitting rating");
+  }
+};
 
     React.useEffect(() => {
         if (onOrderUpdate) {
@@ -129,6 +200,41 @@ function UserOrdersCard({ data, onOrderUpdate }) {
                                     <p className='text-xs text-gray-500 mt-0.5'>
                                         Rs.{item.price} × {item.quantity}
                                     </p>
+
+                                    {shopOrder?.status === "delivered" && (
+  <div className='mt-2 space-x-1 pt-2 border-t border-gray-100'>
+    <p className="text-xs text-gray-500 mb-1">
+      {canRate[item?.item?._id] !== false ? "Rate this item:" : "Your rating:"}
+    </p>
+    <div className='flex gap-1'>
+      {[1,2,3,4,5].map((star) => (
+        <button
+          key={star}
+          onClick={() => canRate[item?.item?._id] !== false && handleRating(item?.item?._id, star)}
+          className={`text-lg ${
+            (userRatings[item?.item?._id] || selectedRating[item?.item?._id]) >= star 
+              ? 'text-yellow-400' 
+              : 'text-gray-300'
+          } ${canRate[item?.item?._id] !== false ? 'cursor-pointer hover:text-yellow-500' : 'cursor-default'}`}
+          disabled={canRate[item?.item?._id] === false}
+        >
+          ★
+        </button>
+      ))}
+    </div>
+    
+    {(userRatings[item?.item?._id] || selectedRating[item?.item?._id]) && (
+      <div className="flex items-center justify-between mt-1">
+        <p className="text-xs text-green-600">
+          Rated: {userRatings[item?.item?._id] || selectedRating[item?.item?._id]}/5
+        </p>
+        {canRate[item?.item?._id] === false && (
+          <p className="text-xs text-gray-500">Already rated</p>
+        )}
+      </div>
+    )}
+  </div>
+)}
                                 </div>
                             ))}
                         </div>

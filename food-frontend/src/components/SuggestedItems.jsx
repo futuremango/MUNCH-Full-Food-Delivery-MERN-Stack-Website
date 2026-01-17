@@ -91,7 +91,7 @@ function SuggestedItems({ data, onClick }) {
           <div className="mt-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
             
             {/* Rating */}
-            <div className="flex items-center gap-1 justify-between sm:justify-start">
+            <div className="flex items-center justify-between sm:justify-start">
               <div className="flex items-center gap-0.5">
                 {foodRating(data.rating?.average || 0)}
               </div>

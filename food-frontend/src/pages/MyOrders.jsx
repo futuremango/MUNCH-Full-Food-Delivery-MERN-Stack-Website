@@ -49,21 +49,7 @@ function MyOrders() {
     useEffect(() => {
         fetchOrders();
     }, [fetchOrders]);
-
-     useEffect(() => {
-    if (!socket) return;
-    
-    const handleOrderStatusUpdate = (data) => {
-        console.log("Order status update received:", data);
-        fetchOrders(); 
-    };
-    
-    socket?.on('orderStatusUpdate', handleOrderStatusUpdate);
-    
-    return () => {
-        socket?.off('orderStatusUpdate', handleOrderStatusUpdate);
-    };
-}, [socket, fetchOrders]);
+     
 
 
 useEffect(() => {

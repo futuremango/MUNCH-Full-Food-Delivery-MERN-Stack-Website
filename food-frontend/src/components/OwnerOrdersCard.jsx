@@ -98,46 +98,87 @@ function OwnerOrdersCard({ data, onStatusUpdate, onOrderUpdate}) {
         return null;
     };
 
-    const handleStatusUpdate = async (newStatus) => {
-        try {
-            setIsUpdating(true);
-            
-            const shopId = getShopId();
-            if (!shopId) {
-                throw new Error("Could not determine shop ID.");
-            }
-
-            // Update local state immediately
-            setCurrentStatus(newStatus);
-            setShowStatusDropdown(false);
-
-            // Send update to backend
-            const result = await axios.put(`${serverUrl}/api/order/update-status`, {
-                orderId: _id,
-                shopId: shopId,
-                status: newStatus
-            }, { withCredentials: true });
-
-            // Update parent component
-            if (onStatusUpdate) {
-                onStatusUpdate(result.data.order || data);
-            }
-            
-            // Trigger order refresh for user side
-            if (onOrderUpdate) {
-                onOrderUpdate(); // This will trigger refetch in MyOrders
-            }
-            setAvailableBoys(result.data.availableBoys || [])
-            
-            console.log("Full response:", result.data);
-            console.log("Available boys:", result.data.availableBoys);
-        } catch (error) {
-            console.log(error)
-        } finally {
-            setIsUpdating(false);
+const handleStatusUpdate = async (newStatus) => {
+    try {
+        setIsUpdating(true);
+        
+        const shopId = getShopId();
+        if (!shopId) {
+            throw new Error("Could not determine shop ID.");
         }
-    };
 
+        // Send update to backend
+        const result = await axios.put(`${serverUrl}/api/order/update-status`, {
+            orderId: _id,
+            shopId: shopId,
+            status: newStatus
+        }, { withCredentials: true });
+
+        console.log("Status update response:", result.data);
+
+        // Update local state
+        setCurrentStatus(newStatus);
+        setShowStatusDropdown(false);
+        
+        // 🎯 SIMPLE FIX: Always check for available boys in the response
+        // This will be empty for orders that don't need delivery boys
+        if (result.data.availableBoys) {
+            console.log("Available delivery boys received:", result.data.availableBoys);
+            setAvailableBoys(result.data.availableBoys || []);
+        } else if (newStatus === "out for delivery") {
+            // If status is "out for delivery" but no available boys in response
+            // (maybe backend didn't send them), show empty
+            setAvailableBoys([]);
+            console.log("No delivery boys available for this order");
+        }
+
+        // Update parent component
+        if (onStatusUpdate) {
+            onStatusUpdate(result.data.order || data);
+        }
+        
+        // Trigger order refresh for user side
+        if (onOrderUpdate) {
+            onOrderUpdate();
+        }
+        
+    } catch (error) {
+        console.error("Error updating status:", error);
+        // Revert status on error
+        setCurrentStatus(shopOrder?.status || "pending");
+        alert("Failed to update status: " + (error.response?.data?.message || error.message));
+    } finally {
+        setIsUpdating(false);
+    }
+};
+
+// Add this function to OwnerOrdersCard.jsx
+const fetchAvailableBoysForOrder = async () => {
+    try {
+        // Only fetch if status is "out for delivery" and we don't have assigned delivery boy
+        if (currentStatus === "out for delivery" && !acceptedDeliveryBoy) {
+            const shopId = getShopId();
+            if (!shopId) return;
+            
+            const response = await axios.post(`${serverUrl}/api/order/get-available-boys`, {
+                orderId: _id,
+                shopOrderId: shopOrder._id
+            }, { withCredentials: true });
+            
+            console.log("Fetched available boys:", response.data.availableBoys);
+            setAvailableBoys(response.data.availableBoys || []);
+        }
+    } catch (error) {
+        console.error("Error fetching available boys:", error);
+    }
+};
+
+// Call this when component loads and when status changes
+useEffect(() => {
+    if (currentStatus === "out for delivery" && !acceptedDeliveryBoy) {
+        fetchAvailableBoysForOrder();
+    }
+}, [currentStatus, acceptedDeliveryBoy]);
     // Auto-refresh order status when in "out for delivery" or "delivered" state
 useEffect(() => {
   if (currentStatus === "out for delivery" || currentStatus === "delivered") {
