@@ -20,6 +20,7 @@ import useUpdateLocation from './hooks/useUpdateLocation'
 import TrackOrderPage from './pages/TrackOrderPage'
 import Shop from './pages/Shop'
 import { SocketProvider } from './context/SocketContext' 
+import ViewMenu from './pages/ViewMenu'
 
 export const serverUrl="http://localhost:8000"
 
@@ -43,6 +44,7 @@ function App() {
     <Route path='/create-edit-shop' element={userData?<CreateEditShop/>:<Navigate to={'/signin'}/>}/>
     <Route path='/add-item' element={userData?<AddItem/>:<Navigate to={'/signin'}/>}/>
     <Route path='/edit-item/:itemId'  element={userData?<EditItem/>:<Navigate to={'/signin'}/>}/>
+    <Route path='/view-menu'  element={userData?<ViewMenu/>:<Navigate to={'/signin'}/>}/>
     <Route path='/my-cart'  element={userData?<CartPage/>:<Navigate to={'/signin'}/>}/>
     <Route path='/checkout'  element={userData?<PaymentMethodPage/>:<Navigate to={'/signin'}/>}/>
     <Route path='/confirmed'  element={userData?<OrderConfirmationPage/>:<Navigate to={'/'}/>}/>

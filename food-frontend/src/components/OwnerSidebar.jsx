@@ -14,6 +14,13 @@ function OwnerSidebar() {
   const [loading, setLoading] = useState(false);
   const { userData, myOrders } = useSelector((state) => state.user);
   const { getShopData } = useSelector((state) => state.owner);
+  const [isNavigating, setIsNavigating] = useState({
+    dashboard: false,
+    addItem: false,
+    viewOrders: false,
+    editShop: false,
+    viewMenu: false
+});
   
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -79,37 +86,80 @@ function OwnerSidebar() {
       <div className="flex-1 p-4 space-y-1">
         {/* Dashboard Home */}
         <button 
-          onClick={() => navigate("/")}
+          onClick={() => {
+              setIsNavigating(prev => ({...prev, dashboard: true}));
+              setTimeout(() => {
+                  navigate("/");
+                  setIsNavigating(prev => ({...prev, dashboard: false}));
+              }, 300);
+          }}
           className="w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 
-            hover:bg-gray-50 hover:shadow-sm text-gray-600 hover:text-gray-900 group"
+              hover:bg-gray-50 hover:shadow-sm text-gray-600 hover:text-gray-900 group"
+          disabled={isNavigating.dashboard}
         >
-          <HiHome className="text-gray-400 group-hover:text-orange-500" size={18} />
-          <span className="font-medium text-sm">Dashboard</span>
+          {isNavigating.dashboard ? (
+              <ClipLoader size={16} color="#6b7280" />
+          ) : (
+              <HiHome className="text-gray-400 group-hover:text-orange-500" size={18} />
+          )}
+          <span className="font-medium text-sm">
+              {isNavigating.dashboard ? "Loading..." : "Dashboard"}
+          </span>
         </button>
 
         {getShopData && (
           <>
             {/* Add Menu Items */}
             <button 
-              onClick={() => navigate('/add-item')}
+              onClick={() => {
+                  setIsNavigating(prev => ({...prev, addItem: true}));
+                  setTimeout(() => {
+                      navigate('/add-item');
+                      setIsNavigating(prev => ({...prev, addItem: false}));
+                  }, 300);
+              }}
               className="w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 
-                hover:bg-orange-50 hover:shadow-sm text-gray-600 hover:text-orange-600 group"
+                  hover:bg-orange-50 hover:shadow-sm text-gray-600 hover:text-orange-600 group"
+              disabled={isNavigating.addItem}
             >
-              <MdAdd className="text-gray-400 group-hover:text-orange-500" size={18} />
-              <span className="font-medium text-sm">Add Menu Items</span>
+              {isNavigating.addItem ? (
+                  <ClipLoader size={16} color="#f97316" />
+              ) : (
+                  <MdAdd className="text-gray-400 group-hover:text-orange-500" size={18} />
+              )}
+              <span className="font-medium text-sm">
+                  {isNavigating.addItem ? "Loading..." : "Add Menu Items"}
+              </span>
             </button>
 
             {/* View Orders */}
             <button 
-              onClick={() => navigate("/myorders")}
+              onClick={() => {
+                  setIsNavigating(prev => ({...prev, viewOrders: true}));
+                  setTimeout(() => {
+                      navigate('/myorders');
+                      setIsNavigating(prev => ({...prev, viewOrders: false}));
+                  }, 300);
+              }}
               className="w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 
                 hover:bg-orange-50 hover:shadow-sm text-gray-600 hover:text-orange-600 group relative"
+              disabled={isNavigating.viewOrders}
             >
               <div className="flex items-center gap-3">
-                <TbReceiptDollar className="text-gray-400 group-hover:text-orange-500" size={18} />
-                <span className="font-medium text-sm">View Orders</span>
+                {isNavigating.viewOrders ? (
+                  <>
+                    <ClipLoader size={16} color="#f97316" />
+                    <span className="font-medium text-sm">Loading...</span>
+                  </>
+                ) : (
+                  <>
+                    <TbReceiptDollar className="text-gray-400 group-hover:text-orange-500" size={18} />
+                    <span className="font-medium text-sm">View Orders</span>
+                  </>
+                )}
               </div>
-              {pendingOrdersCount > 0 && (
+              
+              {!isNavigating.viewOrders && pendingOrdersCount > 0 && (
                 <span className="text-xs font-semibold bg-orange-500 text-white 
                   rounded-full px-2 py-0.5 min-w-5 text-center">
                   {pendingOrdersCount}
@@ -119,22 +169,48 @@ function OwnerSidebar() {
 
             {/* Edit Shop Details */}
             <button 
-              onClick={() => navigate("/create-edit-shop")}
+              onClick={() => {
+                setIsNavigating(prev => ({...prev, editShop: true}));
+                setTimeout(() => {
+                  navigate("/create-edit-shop");
+                  setIsNavigating(prev => ({...prev, editShop: false}));
+                }, 300);
+              }}
               className="w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 
                 hover:bg-orange-50 hover:shadow-sm text-gray-600 hover:text-orange-600 group"
+              disabled={isNavigating.editShop}
             >
-              <FaEdit className="text-gray-400 group-hover:text-orange-500" size={16} />
-              <span className="font-medium text-sm">Edit Shop Details</span>
+              {isNavigating.editShop ? (
+                <ClipLoader size={16} color="#f97316" />
+              ) : (
+                <FaEdit className="text-gray-400 group-hover:text-orange-500" size={16} />
+              )}
+              <span className="font-medium text-sm">
+                {isNavigating.editShop ? "Loading..." : "Edit Shop Details"}
+              </span>
             </button>
 
             {/* View Menu */}
             <button 
-              onClick={() => navigate("/")}
+              onClick={() => {
+                setIsNavigating(prev => ({...prev, viewMenu: true}));
+                setTimeout(() => {
+                  navigate("/view-menu");
+                  setIsNavigating(prev => ({...prev, viewMenu: false}));
+                }, 300);
+              }}
               className="w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 
                 hover:bg-orange-50 hover:shadow-sm text-gray-600 hover:text-orange-600 group"
+              disabled={isNavigating.viewMenu}
             >
-              <MdRestaurantMenu className="text-gray-400 group-hover:text-orange-500" size={18} />
-              <span className="font-medium text-sm">View Menu</span>
+              {isNavigating.viewMenu ? (
+                <ClipLoader size={16} color="#f97316" />
+              ) : (
+                <MdRestaurantMenu className="text-gray-400 group-hover:text-orange-500" size={18} />
+              )}
+              <span className="font-medium text-sm">
+                {isNavigating.viewMenu ? "Loading..." : "View Menu"}
+              </span>
             </button>
           </>
         )}
