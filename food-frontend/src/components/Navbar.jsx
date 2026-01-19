@@ -83,24 +83,27 @@ function Navbar() {
   };
   
 
+// In Navbar.jsx, improve the debounce logic
 useEffect(() => {
   const timeoutId = setTimeout(() => {
     if (searchQuery.trim()) {
       setIsSearching(true);
-      searchBar(searchQuery).finally(() => setIsSearching(false));
+      searchBar(searchQuery)
+        .finally(() => setIsSearching(false))
+        .catch(err => console.error("Search failed:", err));
     } else {
-      dispatch(setSearchItems(null));
+      dispatch(setSearchItems([])); // Use empty array instead of null
     }
-  }, 300); // 300ms debounce
+  }, 500); // Increased to 500ms for better performance
 
   return () => clearTimeout(timeoutId);
-}, [searchQuery]);
+}, [searchQuery, dispatch, getCity]); // Added dependencies
 
   return (
     <div className="w-full h-20 flex bg-[#fff9f6] items-center justify-between md:justify-center gap-6 px-6 fixed top-0 z-50 border-b border-orange-100 shadow-sm">
 
       {/* Heading */}
-      {userData.role==="user" || userData.role ==="deliveryBoy" ? <div className="flex items-center" onClick={()=>navigate("/")}>
+      {userData.role==="user" ? <div className="flex items-center" onClick={()=>navigate("/")}>
           <h1 className="font-super-woobly flex text-3xl font-bold bg-linear-to-r
            from-orange-500 to-red-500 bg-clip-text text-transparent cursor-pointer">
             Munch
@@ -113,6 +116,17 @@ useEffect(() => {
         </div>
         </>
         } 
+
+        {userData.role === "deliveryBoy" && (
+          <div className="absolute left-4 top-4 z-50">
+            <h1 
+              onClick={() => navigate("/")}
+              className="font-super-woobly text-2xl md:text-3xl font-bold bg-linear-to-r from-orange-500 to-red-500 bg-clip-text text-transparent cursor-pointer hover:opacity-90 transition-opacity"
+            >
+              Munch
+            </h1>
+          </div>
+        )}
         
 
         {/* Mobile k liye Search Bar */}
@@ -276,12 +290,15 @@ useEffect(() => {
         }
 
          {/* My Orders button */}
-        <button className="hidden md:block px-4 py-2.5 text-sm font-semibold rounded-xl 
+        {userData.role==="user" && (
+            <button className="hidden md:block px-4 py-2.5 text-sm font-semibold rounded-xl 
         bg-linear-to-r bg-[#ec4a09]/10 text-[#ec4a09] shadow-lg
         transition-all duration-300 hover:shadow-xl transform hover:-translate-y-0.5
          active:translate-y-0" onClick={()=>navigate("/myorders")}>
           My Orders
         </button>
+        )}
+        
 
         {/* User avatar with popup */}
         <div className="relative" ref={popupRef}>

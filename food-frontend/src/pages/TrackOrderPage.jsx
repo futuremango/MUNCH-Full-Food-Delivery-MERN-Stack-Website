@@ -7,10 +7,10 @@ import { MdDeliveryDining } from "react-icons/md";
 import { useNavigate, useParams } from 'react-router-dom'
 import DeliveryBoyTracking from '../components/DeliveryBoyTracking';
 import { useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useSocket } from '../hooks/useSocket';
 
 function TrackOrderPage() {
-    const { socket } = useSelector((state)=> state.user)
+    const { socket, on } = useSocket();
     const [currentOrder, setCurrentOrder] = useState(null)
     const [ liveLocation, setLiveLocation] = useState({})     
     const { orderId } = useParams();
@@ -31,13 +31,13 @@ function TrackOrderPage() {
     
 
     useEffect(()=>{
-        socket?.on('updateDeliveryLocation', ({deliveryBoyId, latitude, longitude})=>{
+        on('updateDeliveryLocation', ({deliveryBoyId, latitude, longitude})=>{
             setLiveLocation(prev=>({
                 ...prev,
                 [deliveryBoyId]: { lat:latitude, lng: longitude }
             }))
         })
-    },[socket])
+    },[socket, on])
 
     React.useEffect(() => {
         handleGetOrder();

@@ -67,8 +67,8 @@ export const placeOrder = async (req, res) => {
         })
         await newOrder.populate("shopOrders.shopOrderItems.item","name image price")
         await newOrder.populate("shopOrders.shop","name")
-        await newOrder.populate("shopOrders.owner","name socketId")
-        await newOrder.populate("user","name email mobile")
+        await newOrder.populate("shopOrders.owner","fullName email socketId")
+        await newOrder.populate("user","fullName email mobile")
 
         const io = req.app.get('io');
         if(io){
@@ -707,5 +707,115 @@ export const verifyOTPDelivery = async (req, res) => {
         
     } catch (error) {
         return res.status(500).json({message: `Error Verifying Delivery OTP ${error.message}`})
+    }
+};
+
+export const getDeliveries = async (req, res) => {
+    try {
+        const deliveryBoyId = req.userId;
+        
+        // Start of today
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        
+        // End of today
+        const endOfDay = new Date();
+        endOfDay.setHours(23, 59, 59, 999);
+        
+        console.log("Fetching deliveries for:", {
+            deliveryBoyId,
+            startOfDay,
+            endOfDay
+        });
+
+        // Find orders where ANY shopOrder has this delivery boy and is delivered TODAY
+        const orders = await Order.find({
+            "shopOrders": {
+                $elemMatch: {
+                    "assignedDeliveryBoy": deliveryBoyId,
+                    "status": "delivered",
+                    "deliveredAt": { 
+                        $gte: startOfDay,
+                        $lte: endOfDay
+                    }
+                }
+            }
+        })
+        .populate("shopOrders.shop", "name")
+        .populate("user", "fullName mobile")
+        .populate("shopOrders.assignedDeliveryBoy", "fullName")
+        .lean();
+
+        console.log("Found orders:", orders.length);
+
+        // Extract TODAY's deliveries
+        let todayDeliveries = [];
+        
+        orders.forEach(order => {
+            order.shopOrders?.forEach(shopOrder => {
+                // Check if this shopOrder belongs to this delivery boy AND was delivered today
+                if (shopOrder.assignedDeliveryBoy && 
+                    shopOrder.assignedDeliveryBoy._id && 
+                    shopOrder.assignedDeliveryBoy._id.toString() === deliveryBoyId.toString() &&
+                    shopOrder.status === "delivered" &&
+                    shopOrder.deliveredAt &&
+                    shopOrder.deliveredAt >= startOfDay &&
+                    shopOrder.deliveredAt <= endOfDay) {
+                    
+                    todayDeliveries.push({
+                        ...shopOrder,
+                        orderId: order._id,
+                        customer: order.user,
+                        shop: shopOrder.shop
+                    });
+                }
+            });
+        });
+
+        console.log("Today's deliveries:", todayDeliveries.length);
+
+        // Calculate stats by hour
+        let stats = {};
+        todayDeliveries.forEach(delivery => {
+            const hour = new Date(delivery.deliveredAt).getHours();
+            stats[hour] = (stats[hour] || 0) + 1;
+        });
+
+        // Format stats
+        let formattedStats = Object.keys(stats).map(hour => ({
+            hour: parseInt(hour),
+            count: stats[hour]
+        }));
+
+        formattedStats.sort((a, b) => a.hour - b.hour);
+
+        // Fill missing hours with 0
+        const completeStats = [];
+        for (let hour = 0; hour < 24; hour++) {
+            const existing = formattedStats.find(s => s.hour === hour);
+            completeStats.push({
+                hour: hour,
+                count: existing ? existing.count : 0,
+                timeLabel: hour < 12 ? `${hour} AM` : hour === 12 ? `12 PM` : `${hour - 12} PM`
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            todayDeliveries: todayDeliveries,
+            totalDeliveries: todayDeliveries.length,
+            stats: completeStats,
+            summary: {
+                today: todayDeliveries.length,
+                byHour: stats
+            }
+        });
+
+    } catch (error) {
+        console.error("Error getting deliveries:", error);
+        return res.status(500).json({ 
+            success: false,
+            message: `Error getting deliveries: ${error.message}` 
+        });
     }
 };

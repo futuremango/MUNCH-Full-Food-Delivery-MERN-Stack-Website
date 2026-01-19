@@ -3,9 +3,11 @@ import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaBox, FaChevronDown, FaChevronUp,
 import { MdRestaurant, MdEdit, MdCheckCircle, MdCancel } from 'react-icons/md'
 import axios from 'axios'
 import { serverUrl } from '../App'
+import { useSocket } from '../hooks/useSocket'; // ✅ Import socket hook
 
-function OwnerOrdersCard({ data, onStatusUpdate, onOrderUpdate}) {
+function OwnerOrdersCard({ data, onStatusUpdate, onOrderUpdate }) {
     const { _id, createdAt, user, deliveryAddress, shopOrders } = data;
+    const { on, off } = useSocket(); // ✅ Get socket methods
     const shortOrderId = _id?.slice(-8).toUpperCase();
     
     const orderDate = new Date(createdAt).toLocaleDateString('en-GB', {
@@ -33,6 +35,50 @@ function OwnerOrdersCard({ data, onStatusUpdate, onOrderUpdate}) {
             setAcceptedDeliveryBoy(shopOrder.assignedDeliveryBoy);
         }
     }, [shopOrder]);
+
+    // ✅ Listen for delivery boy acceptance via socket
+    useEffect(() => {
+        if (!on || !shopOrder?._id) return;
+        
+        const handleDeliveryBoyAccepted = (socketData) => {
+            console.log('Delivery boy accepted via socket:', socketData);
+            
+            // Check if this event is for our order
+            if (socketData.shopOrderId === shopOrder._id) {
+                setAcceptedDeliveryBoy(socketData.deliveryBoy);
+                
+                // Update parent if needed
+                if (onStatusUpdate) {
+                    onStatusUpdate({
+                        ...data,
+                        shopOrders: [{
+                            ...shopOrder,
+                            assignedDeliveryBoy: socketData.deliveryBoy,
+                            status: "out for delivery"
+                        }]
+                    });
+                }
+            }
+        };
+
+        const handleDeliveryStatusUpdate = (socketData) => {
+            console.log('Delivery status update via socket:', socketData);
+            
+            if (socketData.shopOrderId === shopOrder._id && socketData.assignedDeliveryBoy) {
+                setAcceptedDeliveryBoy(socketData.assignedDeliveryBoy);
+            }
+        };
+
+        // Listen for socket events
+        on('deliveryBoyAccepted', handleDeliveryBoyAccepted);
+        on('deliveryStatusUpdate', handleDeliveryStatusUpdate);
+
+        // Cleanup
+        return () => {
+            off('deliveryBoyAccepted', handleDeliveryBoyAccepted);
+            off('deliveryStatusUpdate', handleDeliveryStatusUpdate);
+        };
+    }, [on, off, shopOrder?._id, data, onStatusUpdate]);
 
     const statusConfig = {
         "pending": { 
@@ -98,120 +144,112 @@ function OwnerOrdersCard({ data, onStatusUpdate, onOrderUpdate}) {
         return null;
     };
 
-const handleStatusUpdate = async (newStatus) => {
-    try {
-        setIsUpdating(true);
-        
-        const shopId = getShopId();
-        if (!shopId) {
-            throw new Error("Could not determine shop ID.");
-        }
-
-        // Send update to backend
-        const result = await axios.put(`${serverUrl}/api/order/update-status`, {
-            orderId: _id,
-            shopId: shopId,
-            status: newStatus
-        }, { withCredentials: true });
-
-        console.log("Status update response:", result.data);
-
-        // Update local state
-        setCurrentStatus(newStatus);
-        setShowStatusDropdown(false);
-        
-        // 🎯 SIMPLE FIX: Always check for available boys in the response
-        // This will be empty for orders that don't need delivery boys
-        if (result.data.availableBoys) {
-            console.log("Available delivery boys received:", result.data.availableBoys);
-            setAvailableBoys(result.data.availableBoys || []);
-        } else if (newStatus === "out for delivery") {
-            // If status is "out for delivery" but no available boys in response
-            // (maybe backend didn't send them), show empty
-            setAvailableBoys([]);
-            console.log("No delivery boys available for this order");
-        }
-
-        // Update parent component
-        if (onStatusUpdate) {
-            onStatusUpdate(result.data.order || data);
-        }
-        
-        // Trigger order refresh for user side
-        if (onOrderUpdate) {
-            onOrderUpdate();
-        }
-        
-    } catch (error) {
-        console.error("Error updating status:", error);
-        // Revert status on error
-        setCurrentStatus(shopOrder?.status || "pending");
-        alert("Failed to update status: " + (error.response?.data?.message || error.message));
-    } finally {
-        setIsUpdating(false);
-    }
-};
-
-// Add this function to OwnerOrdersCard.jsx
-const fetchAvailableBoysForOrder = async () => {
-    try {
-        // Only fetch if status is "out for delivery" and we don't have assigned delivery boy
-        if (currentStatus === "out for delivery" && !acceptedDeliveryBoy) {
+    const handleStatusUpdate = async (newStatus) => {
+        try {
+            setIsUpdating(true);
+            
             const shopId = getShopId();
-            if (!shopId) return;
-            
-            const response = await axios.post(`${serverUrl}/api/order/get-available-boys`, {
+            if (!shopId) {
+                throw new Error("Could not determine shop ID.");
+            }
+
+            // Send update to backend
+            const result = await axios.put(`${serverUrl}/api/order/update-status`, {
                 orderId: _id,
-                shopOrderId: shopOrder._id
+                shopId: shopId,
+                status: newStatus
             }, { withCredentials: true });
-            
-            console.log("Fetched available boys:", response.data.availableBoys);
-            setAvailableBoys(response.data.availableBoys || []);
-        }
-    } catch (error) {
-        console.error("Error fetching available boys:", error);
-    }
-};
 
-// Call this when component loads and when status changes
-useEffect(() => {
-    if (currentStatus === "out for delivery" && !acceptedDeliveryBoy) {
-        fetchAvailableBoysForOrder();
-    }
-}, [currentStatus, acceptedDeliveryBoy]);
-    // Auto-refresh order status when in "out for delivery" or "delivered" state
-useEffect(() => {
-  if (currentStatus === "out for delivery" || currentStatus === "delivered") {
-    const interval = setInterval(async () => {
-      try {
-        const result = await axios.get(`${serverUrl}/api/order/get-orders`, 
-          { withCredentials: true });
-        
-        // Find updated order
-        const updatedOrder = result.data.find(order => order._id === _id);
-        if (updatedOrder) {
-          const updatedShopOrder = updatedOrder.shopOrders?.[0];
-          if (updatedShopOrder && updatedShopOrder.status !== currentStatus) {
-            setCurrentStatus(updatedShopOrder.status);
+            console.log("Status update response:", result.data);
+
+            // Update local state
+            setCurrentStatus(newStatus);
+            setShowStatusDropdown(false);
             
-            if (updatedShopOrder.status === "delivered") {
-              setAcceptedDeliveryBoy(updatedShopOrder.assignedDeliveryBoy);
+            if (result.data.availableBoys) {
+                console.log("Available delivery boys received:", result.data.availableBoys);
+                setAvailableBoys(result.data.availableBoys || []);
+            } else if (newStatus === "out for delivery") {
+                setAvailableBoys([]);
+                console.log("No delivery boys available for this order");
             }
-            
-            // Notify parent component
+
+            // Update parent component
             if (onStatusUpdate) {
-              onStatusUpdate(updatedOrder);
+                onStatusUpdate(result.data.order || data);
             }
-          }
+            
+            // Trigger order refresh for user side
+            if (onOrderUpdate) {
+                onOrderUpdate();
+            }
+            
+        } catch (error) {
+            console.error("Error updating status:", error);
+            setCurrentStatus(shopOrder?.status || "pending");
+            alert("Failed to update status: " + (error.response?.data?.message || error.message));
+        } finally {
+            setIsUpdating(false);
         }
-      } catch (error) {
-        console.error("Error refreshing order status:", error);
-      }
-    }, 10000); // Check every 10 seconds
+    };
 
-    return () => clearInterval(interval);
-  }
-}, [currentStatus, _id, onStatusUpdate]);
+    const fetchAvailableBoysForOrder = async () => {
+        try {
+            if (currentStatus === "out for delivery" && !acceptedDeliveryBoy) {
+                const shopId = getShopId();
+                if (!shopId) return;
+                
+                const response = await axios.post(`${serverUrl}/api/order/get-available-boys`, {
+                    orderId: _id,
+                    shopOrderId: shopOrder._id
+                }, { withCredentials: true });
+                
+                console.log("Fetched available boys:", response.data.availableBoys);
+                setAvailableBoys(response.data.availableBoys || []);
+            }
+        } catch (error) {
+            console.error("Error fetching available boys:", error);
+        }
+    };
+
+    // Call this when component loads and when status changes
+    useEffect(() => {
+        if (currentStatus === "out for delivery" && !acceptedDeliveryBoy) {
+            fetchAvailableBoysForOrder();
+        }
+    }, [currentStatus, acceptedDeliveryBoy]);
+
+    // Auto-refresh order status when in "out for delivery" or "delivered" state
+    useEffect(() => {
+        if (currentStatus === "out for delivery" || currentStatus === "delivered") {
+            const interval = setInterval(async () => {
+                try {
+                    const result = await axios.get(`${serverUrl}/api/order/get-orders`, 
+                        { withCredentials: true });
+                    
+                    const updatedOrder = result.data.find(order => order._id === _id);
+                    if (updatedOrder) {
+                        const updatedShopOrder = updatedOrder.shopOrders?.[0];
+                        if (updatedShopOrder && updatedShopOrder.status !== currentStatus) {
+                            setCurrentStatus(updatedShopOrder.status);
+                            
+                            if (updatedShopOrder.status === "delivered") {
+                                setAcceptedDeliveryBoy(updatedShopOrder.assignedDeliveryBoy);
+                            }
+                            
+                            if (onStatusUpdate) {
+                                onStatusUpdate(updatedOrder);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error refreshing order status:", error);
+                }
+            }, 10000);
+
+            return () => clearInterval(interval);
+        }
+    }, [currentStatus, _id, onStatusUpdate]);
 
     return (
         <div className='bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow transition-all duration-200 p-4'>
@@ -232,7 +270,7 @@ useEffect(() => {
                 </div>
                 
                 <div className="flex items-center gap-2">
-                <span className={`text-xs px-2.5 py-1 rounded-full ${
+                    <span className={`text-xs px-2.5 py-1 rounded-full ${
                         data.paymentMethod === "online" 
                             ? "bg-green-50 text-green-700 border border-green-200" 
                             : "bg-yellow-50 text-yellow-700 border border-yellow-200"
@@ -320,7 +358,7 @@ useEffect(() => {
                                             </p>
                                             {typeof acceptedDeliveryBoy === 'object' && acceptedDeliveryBoy.mobile && (
                                                 <p className="flex text-xs text-gray-500 mt-1 gap-2">
-                                                 <FaPhone/> {acceptedDeliveryBoy.mobile}
+                                                    <FaPhone/> {acceptedDeliveryBoy.mobile}
                                                 </p>
                                             )}
                                         </div>
@@ -428,7 +466,6 @@ useEffect(() => {
                                 </div>
                             </div>
                             <div className="text-right">
-                             
                                 <p className="font-medium text-gray-800">Rs.{item.price * item.quantity}</p>
                                 <p className="text-xs text-gray-500">Rs.{item.price} each</p>
                             </div>
@@ -443,7 +480,6 @@ useEffect(() => {
                     <p className="text-xs text-gray-500 mb-1">Total Amount</p>
                     <p className="text-xl font-bold text-gray-900">Rs.{totalAmount}</p>
                 </div>
-               
                 
                 <div className="flex gap-2">
                     {currentStatus === "delivered" || currentStatus === "cancelled" ? (
@@ -465,4 +501,4 @@ useEffect(() => {
     )
 }
 
-export default OwnerOrdersCard
+export default OwnerOrdersCard;

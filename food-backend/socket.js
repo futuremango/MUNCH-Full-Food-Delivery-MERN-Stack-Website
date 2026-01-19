@@ -1,6 +1,7 @@
 import User from "./models/user.model.js";
 
 export const socketHandler = (io) => {
+    let userLastUpdate = {};
     io.on('connection', (socket) => {
         console.log('User connected:', socket.id);
         
@@ -43,6 +44,16 @@ export const socketHandler = (io) => {
         // Handle location updates plus first updating user location in DB
         socket.on('updateLocation', async ({latitude, longitude, userId}) => {
             try {
+                // ✅ Throttle backend updates too
+                const now = Date.now();
+                const lastUpdate = userLastUpdate[userId] || 0;
+                
+                if (now - lastUpdate < 10000) { // 10 second throttle
+                    return;
+                }
+                
+                userLastUpdate[userId] = now;
+                
                 const user = await User.findByIdAndUpdate(userId, {
                     location: {
                         type: 'Point',
@@ -57,11 +68,10 @@ export const socketHandler = (io) => {
                         deliveryBoyId: userId,
                         latitude,
                         longitude,
-                    }
-                )}
-                
-            }catch(error){
-                console.error("Error updateDeliveryLocation:", error);
+                    });
+                }
+            } catch(error){
+                console.error("Error updating location:", error);
             }
         });
 

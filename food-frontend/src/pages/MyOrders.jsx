@@ -6,27 +6,39 @@ import UserOrdersCard from '../components/UserOrdersCard';
 import OwnerOrdersCard from '../components/OwnerOrdersCard';
 import { FaBox, FaShoppingBag } from "react-icons/fa";
 import { setMyOrders } from '../redux/userSlice';
+import { useSocket } from '../hooks/useSocket';
 import axios from 'axios';
 import { serverUrl } from '../App';
 
 function MyOrders() {
     const navigate = useNavigate();
-    const dispatch = useDispatch()
-    const { userData, myOrders, socket } = useSelector((state) => state.user)
+    const dispatch = useDispatch();
+    const { socket, on, off } = useSocket();
+    const { userData, myOrders } = useSelector((state) => state.user)
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [lastUpdated, setLastUpdated] = useState(new Date());
 
-    useEffect(()=>{
-        socket?.on('newOrder',(data)=>{
+        useEffect(() => {
+        if (!socket || !userData?._id) return;
+        
+        const handleNewOrder = (data) => {
             console.log("New order received via socket:", data);
-            if(data.shopOrders?.owner._id === userData._id){
-                dispatch(setMyOrders([data, ...myOrders]))
+            
+            // Check if this order belongs to current owner
+            if (data.shopOrders?.owner?._id === userData._id) {
+                // Use functional update to avoid stale closure
+                dispatch(setMyOrders(prevOrders => [data, ...prevOrders]));
             }
-        })
-        return()=>{
-            socket?.off('newOrder')
-        }
-    },[socket, dispatch, userData, myOrders])
+        };
+        
+        // Use the on method from useSocket hook
+        on('newOrder', handleNewOrder);
+        
+        // Cleanup: Use the off method from useSocket hook
+        return () => {
+            off('newOrder', handleNewOrder);
+        };
+    }, [socket, on, off, dispatch, userData?._id]); 
 
    
     // Use useCallback to memoize the function
@@ -37,7 +49,7 @@ function MyOrders() {
                 withCredentials: true
             });
             dispatch(setMyOrders(response.data));
-            setLastUpdated(new Date()); // Update timestamp
+            setLastUpdated(new Date());
         } catch (error) {
             console.error("Error fetching orders:", error);
         } finally {
